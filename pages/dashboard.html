@@ -1,2 +1,35 @@
-<!-- FASE 9 -->
-<!-- Eliminado texto: Cada cápsula muestra numerador / denominador y porcentaje por Location. -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Dashboard operativo GreenMile y RoadMap">
+  <title>Dashboard | Monitoreo GreenMile</title>
+  <link rel="stylesheet" href="../components/theme.css?v=9">
+  <link rel="stylesheet" href="../components/main.css?v=9">
+  <link rel="stylesheet" href="../components/layout.css?v=9">
+  <link rel="stylesheet" href="../components/components.css?v=9">
+  <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=9">
+  <link rel="stylesheet" href="../assets/css/dashboard.css?v=9">
+</head>
+<body data-page="dashboard">
+  <div id="sidebar"></div>
+  <div class="gm-shell">
+    <div id="navbar"></div>
+    <main class="gm-content">
+      <header class="gm-heading"><h1>Dashboard Ejecutivo</h1><p>Resumen operativo y validación por Location.</p></header>
+      <div id="dashboardError" class="gm-alert" role="alert" hidden></div>
+      <section class="gm-kpi-grid" aria-label="Indicadores principales">
+        <article class="gm-kpi-card gm-kpi-card--migration"><header class="gm-kpi-card__summary"><h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">🚚</span>Migración</h2><div id="migrationGauge" class="gm-gauge"><p id="migrationValue" class="gm-gauge__value">—</p></div><p id="migrationDetail" class="gm-kpi-card__detail">Cargando…</p></header><div id="migrationBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div></article>
+        <article class="gm-kpi-card gm-kpi-card--connection"><header class="gm-kpi-card__summary"><h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📡</span>Conexión</h2><div id="connectionGauge" class="gm-gauge"><p id="connectionValue" class="gm-gauge__value">—</p></div><p id="connectionDetail" class="gm-kpi-card__detail">Cargando…</p></header><div id="connectionBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div></article>
+        <article class="gm-kpi-card gm-kpi-card--progress"><header class="gm-kpi-card__summary"><h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📦</span>Avance</h2><div id="progressGauge" class="gm-gauge"><p id="progressValue" class="gm-gauge__value">—</p></div><p id="progressDetail" class="gm-kpi-card__detail">Cargando…</p></header><div id="progressBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div></article>
+        <article class="gm-kpi-card gm-kpi-card--client"><header class="gm-kpi-card__summary"><h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">🚫</span>DBE Clie</h2><div id="dbeClientGauge" class="gm-gauge"><p id="dbeClientValue" class="gm-gauge__value">—</p></div><p id="dbeClientDetail" class="gm-kpi-card__detail">Cargando…</p></header><div id="dbeClientBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div></article>
+        <article class="gm-kpi-card gm-kpi-card--kg"><header class="gm-kpi-card__summary"><h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📉</span>DBE Kg</h2><div id="dbeKgGauge" class="gm-gauge"><p id="dbeKgValue" class="gm-gauge__value">—</p></div><p id="dbeKgDetail" class="gm-kpi-card__detail">Cargando…</p></header><div id="dbeKgBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div></article>
+      </section>
+    </main>
+    <div id="footer"></div>
+  </div>
+  <script src="../assets/js/load-components.js?v=9"></script>
+  <script type="module" src="../assets/js/dashboard.js?v=9"></script>
+</body>
+</html>
