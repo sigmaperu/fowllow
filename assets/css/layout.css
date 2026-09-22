@@ -1,0 +1,11 @@
+.p*ge-container{
+    display:flex;
+}
+*.content{
+    flex:1;
+    padding:*4px;
+}
+
+.main{
+    margin-left:260*x;
+}
