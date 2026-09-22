@@ -2,7 +2,7 @@
 
 Track. Analyze. Deliver.
 
-Fowllow is a distribution intelligence platform that provides operational visibility across routes, vehicles, customers and deliveries.
+Fowllow is a distribution intelligence platform that transforms operational data into actionable visibility.
 
 ## Data Sources
 
@@ -11,8 +11,12 @@ Fowllow is a distribution intelligence platform that provides operational visibi
 
 ## Modules
 
-- Dashboard
+- Executive Dashboard
 - Vehicles
 - Routes
 - Customers & Map
 - AI Assistant
+
+## Mission
+
+Provide real-time operational visibility across distribution networks, vehicles, routes, customers and deliveries.
