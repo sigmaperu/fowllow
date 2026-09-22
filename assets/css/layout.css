@@ -1,11 +1,24 @@
-.p*ge-container{
-    display:flex;
-}
-*.content{
-    flex:1;
-    padding:*4px;
+.page-container {
+    display: flex;
+    min-height: 100vh;
 }
 
-.main{
-    margin-left:260*x;
+.main {
+    flex: 1;
+    margin-left: 260px;
+    min-width: 0;
+}
+
+.content {
+    padding: 24px;
+}
+
+@media (max-width: 768px) {
+    .main {
+        margin-left: 0;
+    }
+
+    .content {
+        padding: 16px;
+    }
 }
