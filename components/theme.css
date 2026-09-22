@@ -1,0 +1,13 @@
+:root {
+    --sigma-blue: #0067c0;
+    --migration: #2196f3;
+    --connection: #009688;
+    --progress: #7e57c2;
+    --dbe-client: #e53935;
+    --dbe-kg: #fb8c00;
+    --background: #f5f7fb;
+    --surface: #ffffff;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --radius: 18px;
+}
