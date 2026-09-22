@@ -1,35 +1,4 @@
-export const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
-
-export function setText(id, value) {
-  const element = document.getElementById(id);
-  if (element) element.textContent = value;
-}
-
-export function renderKpi(id, metric, detailFormatter = (m) => `${m.numerator} / ${m.denominator}`) {
-  setText(`${id}Value`, formatPercent(metric.value));
-  setText(`${id}Detail`, detailFormatter(metric));
-}
-
-export function renderRanking(targetId, items) {
-  const target = document.getElementById(targetId);
-  if (!target) return;
-
-  if (!items.length) {
-    target.innerHTML = '<p class="loading-state">No hay datos para mostrar.</p>';
-    return;
-  }
-
-  target.replaceChildren(...items.map((item) => {
-    const row = document.createElement("div");
-    row.className = "rank-row";
-    row.innerHTML = `
-      <span class="rank-name" title="${escapeHtml(item.location)}">${escapeHtml(item.location)}</span>
-      <div class="rank-track" aria-hidden="true"><div class="rank-fill" style="width:${Math.min(100, Math.max(0, item.value))}%"></div></div>
-      <span class="rank-value">${formatPercent(item.value)}</span>`;
-    return row;
-  }));
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char]));
-}
+export const percent=value=>`${Number(value||0).toFixed(1)}%`;export function text(id,value){const node=document.getElementById(id);if(node)node.textContent=value}
+export function kpi(prefix,value,detail){text(`${prefix}Value`,percent(value.value));text(`${prefix}Detail`,detail??`${value.numerator} / ${value.denominator}`)}
+const escape=value=>String(value).replace(/[&<>"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[char]));
+export function ranks(id,items){const target=document.getElementById(id);if(!target)return;if(!items.length){target.innerHTML='<p class="gm-loading">No hay datos para mostrar.</p>';return}target.innerHTML=items.map(item=>`<div class="gm-rank"><span class="gm-rank__name" title="${escape(item.location)}">${escape(item.location)}</span><div class="gm-rank__track" aria-hidden="true"><div class="gm-rank__fill" style="width:${Math.min(100,Math.max(0,item.value))}%"></div></div><span class="gm-rank__value">${percent(item.value)}</span></div>`).join("")}

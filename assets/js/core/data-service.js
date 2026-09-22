@@ -1,33 +1,3 @@
-import { CONFIG } from "./config.js";
-
-let cache = null;
-
-function extractRows(payload) {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.value)) return payload.value;
-  if (Array.isArray(payload?.rows)) return payload.rows;
-  throw new TypeError("PowerApp_Data.json no contiene un arreglo reconocible.");
-}
-
-export async function loadPowerAppData({ forceRefresh = false } = {}) {
-  if (cache && !forceRefresh) return cache;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), CONFIG.fetchTimeoutMs);
-
-  try {
-    const response = await fetch(CONFIG.dataUrl, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-      signal: controller.signal
-    });
-
-    if (!response.ok) throw new Error(`Error HTTP ${response.status} al obtener PowerApp_Data.json.`);
-    const payload = await response.json();
-    cache = extractRows(payload);
-    return cache;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
+import{CONFIG}from"./config.js";let cache=null;
+function rowsFrom(payload){if(Array.isArray(payload))return payload;for(const key of["data","value","rows","items"]){if(Array.isArray(payload?.[key]))return payload[key]}throw new TypeError("PowerApp_Data.json no contiene un arreglo reconocible")}
+export async function loadPowerAppData(){if(cache)return cache;const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),CONFIG.timeoutMs);try{const response=await fetch(`${CONFIG.dataUrl}?v=${Date.now()}`,{cache:"no-store",headers:{Accept:"application/json"},signal:controller.signal});if(!response.ok)throw new Error(`PowerApp_Data.json: HTTP ${response.status}`);cache=rowsFrom(await response.json());return cache}finally{clearTimeout(timer)}}
