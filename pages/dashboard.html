@@ -1,1 +1,69 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="../components/theme.css"><link rel="stylesheet" href="../components/layout.css"><link rel="stylesheet" href="../components/main.css"><link rel="stylesheet" href="../components/components.css"><link rel="stylesheet" href="../assets/css/sidebar-notch.css"><title>Dashboard</title></head><body><div id="sidebar"></div><div class="main"><div id="navbar"></div><main class="content"><h1>Dashboard GreenMile</h1></main><div id="footer"></div></div><script src="../assets/js/load-components.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard operativo de distribución GreenMile y RoadMap.">
+  <title>Dashboard | Monitoreo GreenMile</title>
+  <link rel="stylesheet" href="../components/theme.css">
+  <link rel="stylesheet" href="../components/main.css">
+  <link rel="stylesheet" href="../components/layout.css">
+  <link rel="stylesheet" href="../components/components.css">
+  <link rel="stylesheet" href="../assets/css/sidebar-notch.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+</head>
+<body data-page="dashboard">
+  <div id="sidebar"></div>
+
+  <div class="app-shell">
+    <div id="navbar"></div>
+
+    <main class="page-content">
+      <header class="page-heading">
+        <h2>Dashboard Ejecutivo</h2>
+        <p>Seguimiento operativo consolidado por RoadMap y GreenMile.</p>
+      </header>
+
+      <div id="dashboardError" class="alert" role="alert" hidden></div>
+
+      <section class="dashboard-grid" aria-label="Indicadores principales">
+        <article class="kpi-card kpi-migration">
+          <p class="kpi-label">Migración</p>
+          <p id="migrationValue" class="kpi-value">—</p>
+          <p id="migrationDetail" class="kpi-detail">Cargando…</p>
+        </article>
+        <article class="kpi-card kpi-connection">
+          <p class="kpi-label">Conexión</p>
+          <p id="connectionValue" class="kpi-value">—</p>
+          <p id="connectionDetail" class="kpi-detail">Cargando…</p>
+        </article>
+        <article class="kpi-card kpi-progress">
+          <p class="kpi-label">Avance</p>
+          <p id="progressValue" class="kpi-value">—</p>
+          <p id="progressDetail" class="kpi-detail">Cargando…</p>
+        </article>
+        <article class="kpi-card kpi-dbe-client">
+          <p class="kpi-label">DBE Clie</p>
+          <p id="dbeClientValue" class="kpi-value">—</p>
+          <p id="dbeClientDetail" class="kpi-detail">Cargando…</p>
+        </article>
+        <article class="kpi-card kpi-dbe-kg">
+          <p class="kpi-label">DBE Kg</p>
+          <p id="dbeKgValue" class="kpi-value">—</p>
+          <p id="dbeKgDetail" class="kpi-detail">Cargando…</p>
+        </article>
+      </section>
+
+      <section class="panel" aria-labelledby="rankingTitle">
+        <div class="panel-header"><h3 id="rankingTitle">Avance por Location</h3></div>
+        <div id="locationRanking" class="rank-list"><p class="loading-state">Cargando datos…</p></div>
+      </section>
+    </main>
+
+    <div id="footer"></div>
+  </div>
+
+  <script src="../assets/js/load-components.js"></script>
+  <script type="module" src="../assets/js/dashboard.js"></script>
+</body>
+</html>
