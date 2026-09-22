@@ -1,1 +1,91 @@
-<html><head><title>Rutas</title></head><body><h1>Rutas</h1><p>Vista operativa de rutas.</p></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Vista operativa de rutas de GreenMile y RoadMap">
+  <title>Rutas | Monitoreo GreenMile</title>
+  <link rel="stylesheet" href="../components/theme.css?v=11-1">
+  <link rel="stylesheet" href="../components/main.css?v=11-1">
+  <link rel="stylesheet" href="../components/layout.css?v=11-1">
+  <link rel="stylesheet" href="../components/components.css?v=11-1">
+  <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=11-1">
+  <link rel="stylesheet" href="../assets/css/rutas.css?v=11-1">
+</head>
+<body data-page="rutas">
+  <div id="sidebar"></div>
+  <div class="gm-shell">
+    <div id="navbar"></div>
+    <main class="gm-content">
+      <header class="gm-heading">
+        <h1>Rutas</h1>
+        <p>Vista operativa por RutaVenta y Canal.</p>
+      </header>
+
+      <div id="routesError" class="gm-alert" role="alert" hidden></div>
+
+      <section class="rt-kpis" aria-label="Indicadores de rutas filtradas">
+        <article class="rt-kpi rt-kpi--progress">
+          <div class="rt-kpi__copy">
+            <span>Avance</span>
+            <strong id="avgProgress">—</strong>
+            <small id="progressRatio">Cargando…</small>
+          </div>
+          <div id="progressGauge" class="rt-kpi__gauge" aria-hidden="true"><span>📦</span></div>
+        </article>
+        <article class="rt-kpi rt-kpi--client">
+          <div class="rt-kpi__copy">
+            <span>DBE Clie</span>
+            <strong id="dbeClient">—</strong>
+            <small id="dbeClientRatio">Cargando…</small>
+          </div>
+          <div id="dbeClientGauge" class="rt-kpi__gauge" aria-hidden="true"><span>🚫</span></div>
+        </article>
+        <article class="rt-kpi rt-kpi--kg">
+          <div class="rt-kpi__copy">
+            <span>DBE Kg</span>
+            <strong id="dbeKg">—</strong>
+            <small id="dbeKgRatio">Cargando…</small>
+          </div>
+          <div id="dbeKgGauge" class="rt-kpi__gauge" aria-hidden="true"><span>📉</span></div>
+        </article>
+      </section>
+
+      <section class="rt-toolbar" aria-label="Filtros de rutas">
+        <label class="rt-search">
+          <span class="rt-sr-only">Buscar ruta</span>
+          <input id="routeSearch" type="search" placeholder="Buscar RutaVenta…" autocomplete="off">
+        </label>
+        <label>
+          <span class="rt-sr-only">Filtrar por canal</span>
+          <select id="channelFilter"><option value="">Todos los Canales</option></select>
+        </label>
+        <div class="rt-segmented" role="group" aria-label="Alcance de rutas">
+          <button type="button" class="rt-segmented__button" data-scope="MIGRADAS" aria-pressed="false">Migradas</button>
+          <button type="button" class="rt-segmented__button" data-scope="NO_MIGRADAS" aria-pressed="false">No Migradas</button>
+          <button type="button" class="rt-segmented__button is-active" data-scope="PLANIFICADAS" aria-pressed="true">Planificadas</button>
+        </div>
+        <span id="visibleCount" class="rt-visible-count"></span>
+      </section>
+
+      <section class="rt-table-wrap" aria-label="Detalle por ruta">
+        <table class="rt-table">
+          <thead><tr>
+            <th><button class="rt-sort" data-sort="routeKey">RutaVenta <span>↕</span></button></th>
+            <th><button class="rt-sort" data-sort="channel">Canal <span>↕</span></button></th>
+            <th><button class="rt-sort" data-sort="migration">Migración <span>↕</span></button></th>
+            <th><button class="rt-sort" data-sort="connection">Conexión <span>↕</span></button></th>
+            <th><button class="rt-sort" data-sort="progress">Avance <span>↕</span></button></th>
+            <th><button class="rt-sort" data-sort="dbeClient">DBE Clie <span>↕</span></button></th>
+            <th><button class="rt-sort" data-sort="dbeKg">DBE Kg <span>↕</span></button></th>
+          </tr></thead>
+          <tbody id="routeTable"><tr><td colspan="7" class="rt-empty">Cargando datos…</td></tr></tbody>
+        </table>
+      </section>
+    </main>
+    <div id="footer"></div>
+  </div>
+  <script src="../assets/js/load-components.js?v=11-1"></script>
+  <script type="module" src="../assets/js/rutas.js?v=11-1"></script>
+</body>
+</html>
