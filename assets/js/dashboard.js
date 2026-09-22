@@ -1,5 +1,5 @@
 import{loadPowerAppData}from"./core/data-service.js";
-import{calculateKpis,breakdownByLocationAndChannel,operationDate}from"./core/kpi-engine.js";
+import{calculateKpis,breakdownByLocation,operationDate}from"./core/kpi-engine.js";
 import{renderSummary,renderBreakdown,setText}from"./core/ui.js";
 
 const componentsReady=()=>document.getElementById("operationDate")?Promise.resolve():new Promise(resolve=>document.addEventListener("components:ready",resolve,{once:true}));
@@ -17,7 +17,7 @@ async function start(){
     const metrics=calculateKpis(rows);
     cards.forEach(([prefix,key,target])=>{
       renderSummary(prefix,metrics[key]);
-      renderBreakdown(target,breakdownByLocationAndChannel(rows,key));
+      renderBreakdown(target,breakdownByLocation(rows,key));
     });
     setText("operationDate",operationDate(rows));
   }catch(error){
