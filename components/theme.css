@@ -1,13 +1,22 @@
 :root {
-    --sigma-blue: #0067c0;
-    --migration: #2196f3;
-    --connection: #009688;
-    --progress: #7e57c2;
-    --dbe-client: #e53935;
-    --dbe-kg: #fb8c00;
-    --background: #f5f7fb;
-    --surface: #ffffff;
-    --text-primary: #1f2937;
-    --text-secondary: #6b7280;
-    --radius: 18px;
+  --sigma-blue: #0067c0;
+  --migration: #2196f3;
+  --connection: #009688;
+  --progress: #7e57c2;
+  --dbe-client: #e53935;
+  --dbe-kg: #fb8c00;
+  --sidebar: #10233f;
+  --sidebar-deep: #0a182c;
+  --background: #f4f7fb;
+  --surface: #ffffff;
+  --text-primary: #172033;
+  --text-secondary: #64748b;
+  --border: #e5eaf1;
+  --success: #15803d;
+  --danger: #c62828;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.07);
+  --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.10);
+  --sidebar-width: 264px;
 }
