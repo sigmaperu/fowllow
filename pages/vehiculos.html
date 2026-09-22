@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Vista operativa de vehículos de GreenMile y RoadMap">
   <title>Vehículos | Monitoreo GreenMile</title>
-  <link rel="stylesheet" href="../components/theme.css?v=10-3">
-  <link rel="stylesheet" href="../components/main.css?v=10-3">
-  <link rel="stylesheet" href="../components/layout.css?v=10-3">
-  <link rel="stylesheet" href="../components/components.css?v=10-3">
-  <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=10-3">
-  <link rel="stylesheet" href="../assets/css/vehiculos.css?v=10-3">
+  <link rel="stylesheet" href="../components/theme.css?v=10-4">
+  <link rel="stylesheet" href="../components/main.css?v=10-4">
+  <link rel="stylesheet" href="../components/layout.css?v=10-4">
+  <link rel="stylesheet" href="../components/components.css?v=10-4">
+  <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=10-4">
+  <link rel="stylesheet" href="../assets/css/vehiculos.css?v=10-4">
 </head>
 <body data-page="vehiculos">
   <div id="sidebar"></div>
@@ -26,19 +26,28 @@
 
       <section class="vh-kpis" aria-label="Indicadores de vehículos filtrados">
         <article class="vh-kpi vh-kpi--progress">
-          <span>Avance</span>
-          <strong id="avgProgress">—</strong>
-          <small id="progressRatio">Cargando…</small>
+          <div class="vh-kpi__copy">
+            <span>Avance</span>
+            <strong id="avgProgress">—</strong>
+            <small id="progressRatio">Cargando…</small>
+          </div>
+          <div id="progressGauge" class="vh-kpi__gauge" aria-hidden="true"><span>📦</span></div>
         </article>
         <article class="vh-kpi vh-kpi--client">
-          <span>DBE Clie</span>
-          <strong id="dbeClient">—</strong>
-          <small id="dbeClientRatio">Cargando…</small>
+          <div class="vh-kpi__copy">
+            <span>DBE Clie</span>
+            <strong id="dbeClient">—</strong>
+            <small id="dbeClientRatio">Cargando…</small>
+          </div>
+          <div id="dbeClientGauge" class="vh-kpi__gauge" aria-hidden="true"><span>🚫</span></div>
         </article>
         <article class="vh-kpi vh-kpi--kg">
-          <span>DBE Kg</span>
-          <strong id="dbeKg">—</strong>
-          <small id="dbeKgRatio">Cargando…</small>
+          <div class="vh-kpi__copy">
+            <span>DBE Kg</span>
+            <strong id="dbeKg">—</strong>
+            <small id="dbeKgRatio">Cargando…</small>
+          </div>
+          <div id="dbeKgGauge" class="vh-kpi__gauge" aria-hidden="true"><span>📉</span></div>
         </article>
       </section>
 
@@ -47,46 +56,36 @@
           <span class="vh-sr-only">Buscar vehículo</span>
           <input id="vehicleSearch" type="search" placeholder="Buscar VehicleKey…" autocomplete="off">
         </label>
-
         <label>
           <span class="vh-sr-only">Filtrar por centro</span>
-          <select id="locationFilter">
-            <option value="">Todos los Centros</option>
-          </select>
+          <select id="locationFilter"><option value="">Todos los Centros</option></select>
         </label>
-
         <div class="vh-segmented" role="group" aria-label="Alcance de vehículos">
           <button type="button" class="vh-segmented__button" data-scope="MIGRADOS" aria-pressed="false">Migrados</button>
           <button type="button" class="vh-segmented__button" data-scope="NO_MIGRADOS" aria-pressed="false">No Migrados</button>
           <button type="button" class="vh-segmented__button is-active" data-scope="PLANIFICADOS" aria-pressed="true">Planificados</button>
         </div>
-
         <span id="visibleCount" class="vh-visible-count"></span>
       </section>
 
       <section class="vh-table-wrap" aria-label="Detalle por vehículo">
         <table class="vh-table">
-          <thead>
-            <tr>
-              <th>VehicleKey</th>
-              <th>Centro</th>
-              <th>Migración</th>
-              <th>Conexión</th>
-              <th>Avance</th>
-              <th>DBE Clie</th>
-              <th>DBE Kg</th>
-            </tr>
-          </thead>
-          <tbody id="vehicleTable">
-            <tr><td colspan="7" class="vh-empty">Cargando datos…</td></tr>
-          </tbody>
+          <thead><tr>
+            <th><button class="vh-sort" data-sort="vehicleKey">VehicleKey <span>↕</span></button></th>
+            <th><button class="vh-sort" data-sort="location">Centro <span>↕</span></button></th>
+            <th><button class="vh-sort" data-sort="migration">Migración <span>↕</span></button></th>
+            <th><button class="vh-sort" data-sort="connection">Conexión <span>↕</span></button></th>
+            <th><button class="vh-sort" data-sort="progress">Avance <span>↕</span></button></th>
+            <th><button class="vh-sort" data-sort="dbeClient">DBE Clie <span>↕</span></button></th>
+            <th><button class="vh-sort" data-sort="dbeKg">DBE Kg <span>↕</span></button></th>
+          </tr></thead>
+          <tbody id="vehicleTable"><tr><td colspan="7" class="vh-empty">Cargando datos…</td></tr></tbody>
         </table>
       </section>
     </main>
     <div id="footer"></div>
   </div>
-
-  <script src="../assets/js/load-components.js?v=10-3"></script>
-  <script type="module" src="../assets/js/vehiculos.js?v=10-3"></script>
+  <script src="../assets/js/load-components.js?v=10-4"></script>
+  <script type="module" src="../assets/js/vehiculos.js?v=10-4"></script>
 </body>
 </html>
