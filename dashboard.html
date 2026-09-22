@@ -1,14 +1,148 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Dashboard - Fowllow</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | Fowllow</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:#07133A;
+  color:white;
+  font-family:Segoe UI,sans-serif;
+}
+
+.sidebar{
+  position:fixed;
+  width:250px;
+  height:100vh;
+  background:#08112F;
+  padding:25px;
+}
+
+.brand{
+  text-align:center;
+  margin-bottom:40px;
+}
+
+.brand img{
+  width:90px;
+}
+
+.brand h2{
+  margin-top:10px;
+}
+
+.menu a{
+  display:block;
+  color:white;
+  text-decoration:none;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+.menu a:hover{
+  background:#112056;
+}
+
+.main{
+  margin-left:250px;
+  padding:30px;
+}
+
+.title{
+  margin-bottom:30px;
+}
+
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#0F1F52;
+  padding:25px;
+  border-radius:20px;
+}
+
+.card h3{
+  color:#cbd5e1;
+  font-size:14px;
+}
+
+.card .value{
+  font-size:42px;
+  margin-top:10px;
+  font-weight:bold;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h1>Dashboard</h1>
+<div class="sidebar">
+
+<div class="brand">
+logo/fowllow-icon.png
+<h2>Fowllow</h2>
+</div>
+
+<div class="menu">
+<a href="dashboard.html">Dashboard</a>
+vehicles.htmlVehicles</a>
+routes.htmlRoutes</a>
+customers.htmlCustomers</a>
+<antact.htmlContact</a>
+</div>
+
+</div>
+
+<div class="main">
+
+<h1 class="title">Executive Dashboard</h1>
+
+<div class="kpis">
+
+<div class="card">
+<h3>Migración</h3>
+<div class="value">--%</div>
+</div>
+
+<div class="card">
+<h3>Conexión</h3>
+<div class="value">--%</div>
+</div>
+
+<div class="card">
+<h3>Avance</h3>
+<div class="value">--%</div>
+</div>
+
+<div class="card">
+<h3>DBE Cliente</h3>
+<div class="value">--</div>
+</div>
+
+<div class="card">
+<h3>DBE Kg</h3>
+<div class="value">--</div>
+</div>
+
+</div>
+
+</div>
 
 </body>
-
 </html>
-
