@@ -42,8 +42,13 @@ export function calculateKpis(rows){
   const migratedVehicles=unique(migrated(rows),row=>text(row.VehicleKey));
   const connectedVehicles=unique(migrated(rows).filter(row=>clean(row.EstadoConexion)==="CONECTADO"),row=>text(row.VehicleKey));
   const customers=customerGroups(rows);
-  let visited=0,rejected=0;
-  customers.forEach(group=>{const state=customerState(group);if(state==="ENTREGADO"||state==="RECHAZADO")visited++;if(state==="RECHAZADO")rejected++});
+  let visited=0;
+  let rejected=0;
+  customers.forEach(group=>{
+    const state=customerState(group);
+    if(state==="ENTREGADO"||state==="RECHAZADO")visited+=1;
+    if(state==="RECHAZADO")rejected+=1;
+  });
   const migratedData=migrated(rows);
   const migratedKg=migratedData.reduce((sum,row)=>sum+numeric(row.KgPlanificados),0);
   const rejectedKg=migratedData.filter(row=>clean(row.EstadoEntrega)==="RECHAZADO").reduce((sum,row)=>sum+numeric(row.KgPlanificados),0);
@@ -56,29 +61,16 @@ export function calculateKpis(rows){
   };
 }
 
-const metricValue=(rows,key)=>calculateKpis(rows)[key];
-
-export function breakdownByLocationAndChannel(rows,metricKey){
+export function breakdownByLocation(rows,metricKey){
   const locations=new Map();
   rows.forEach(row=>{
     const location=text(row.Location)||"Sin Location";
     if(!locations.has(location))locations.set(location,[]);
     locations.get(location).push(row);
   });
-
-  return[...locations.entries()].map(([location,locationRows])=>{
-    const channels=new Map();
-    locationRows.forEach(row=>{
-      const channel=text(row.Canal)||"Sin Canal";
-      if(!channels.has(channel))channels.set(channel,[]);
-      channels.get(channel).push(row);
-    });
-    return{
-      name:location,
-      metric:metricValue(locationRows,metricKey),
-      channels:[...channels.entries()].map(([name,channelRows])=>({name,metric:metricValue(channelRows,metricKey)})).sort((a,b)=>b.metric.value-a.metric.value)
-    };
-  }).sort((a,b)=>b.metric.value-a.metric.value);
+  return[...locations.entries()]
+    .map(([name,locationRows])=>({name,metric:calculateKpis(locationRows)[metricKey]}))
+    .sort((a,b)=>b.metric.value-a.metric.value);
 }
 
 export function operationDate(rows){return rows.find(row=>row.DeliveryDate)?.DeliveryDate??"Sin fecha"}
