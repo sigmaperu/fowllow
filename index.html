@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
 
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -9,54 +9,75 @@
 
 <style>
 
-body{
+*{
     margin:0;
-    background:#0f172a;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#07133A;
     color:white;
     font-family:'Segoe UI',sans-serif;
 }
 
 .container{
+    min-height:100vh;
     display:flex;
     flex-direction:column;
     justify-content:center;
     align-items:center;
     text-align:center;
-    height:100vh;
+    padding:40px;
 }
 
 .brand{
     display:flex;
     align-items:center;
-    gap:30px;
-    margin-bottom:40px;
+    justify-content:center;
+    gap:40px;
+    margin-bottom:30px;
 }
 
-.fowllow{
+.logo-fowllow{
     width:180px;
+    height:auto;
 }
 
-.sigma{
+.logo-sigma{
     width:120px;
+    height:auto;
 }
 
 h1{
-    margin:0;
-    font-size:4rem;
+    font-size:72px;
+    font-weight:700;
+    margin-bottom:12px;
 }
 
 .subtitle{
-    margin-top:10px;
-    color:#cbd5e1;
-    font-size:1.3rem;
+    font-size:28px;
+    color:#CBD5E1;
+    margin-bottom:35px;
 }
 
 .badge{
-    margin-top:30px;
-    background:#ec4899;
-    padding:12px 24px;
-    border-radius:12px;
-    font-weight:bold;
+    background:#EC4899;
+    color:white;
+    padding:16px 32px;
+    border-radius:16px;
+    font-size:24px;
+    font-weight:600;
+    box-shadow:0 10px 25px rgba(236,72,153,.25);
+}
+
+.footer{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    color:#94A3B8;
+    font-size:14px;
 }
 
 </style>
@@ -69,11 +90,9 @@ h1{
 
     <div class="brand">
 
-        logo/fowllow-icon.png
-
-        logo/Sigma.png
-
-    </div>
+        <img
+            src="logo/fowllow-icon.png"
+          v>
 
     <h1>Fowllow</h1>
 
@@ -87,6 +106,9 @@ h1{
 
 </div>
 
-</body>
+<div class="footer">
+    Powered by Sigma + Fowllow
+</div>
 
+</body>
 </html>
