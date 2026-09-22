@@ -1,4 +1,30 @@
-import{loadPowerAppData}from"./core/data-service.js";import{calculateKpis,progressByLocation,operationDate}from"./core/kpi-engine.js";import{kpi,ranks,text}from"./core/ui.js";
+import{loadPowerAppData}from"./core/data-service.js";
+import{calculateKpis,breakdownByLocationAndChannel,operationDate}from"./core/kpi-engine.js";
+import{renderSummary,renderBreakdown,setText}from"./core/ui.js";
+
 const componentsReady=()=>document.getElementById("operationDate")?Promise.resolve():new Promise(resolve=>document.addEventListener("components:ready",resolve,{once:true}));
-async function start(){try{const[rows]=await Promise.all([loadPowerAppData(),componentsReady()]);const values=calculateKpis(rows);kpi("migration",values.migration);kpi("connection",values.connection);kpi("progress",values.progress);kpi("dbeClient",values.dbeClient);kpi("dbeKg",values.dbeKg,`${values.dbeKg.numerator.toFixed(1)} / ${values.dbeKg.denominator.toFixed(1)} kg`);ranks("locationRanking",progressByLocation(rows));text("operationDate",operationDate(rows))}catch(error){console.error(error);const alert=document.getElementById("dashboardError");alert.hidden=false;alert.textContent="No se pudo cargar PowerApp_Data.json desde RoadMap. Revisa la consola del navegador."}}
+const cards=[
+  ["migration","migration","migrationBreakdown"],
+  ["connection","connection","connectionBreakdown"],
+  ["progress","progress","progressBreakdown"],
+  ["dbeClient","dbeClient","dbeClientBreakdown"],
+  ["dbeKg","dbeKg","dbeKgBreakdown"]
+];
+
+async function start(){
+  try{
+    const[rows]=await Promise.all([loadPowerAppData(),componentsReady()]);
+    const metrics=calculateKpis(rows);
+    cards.forEach(([prefix,key,target])=>{
+      renderSummary(prefix,metrics[key]);
+      renderBreakdown(target,breakdownByLocationAndChannel(rows,key));
+    });
+    setText("operationDate",operationDate(rows));
+  }catch(error){
+    console.error(error);
+    const alert=document.getElementById("dashboardError");
+    if(alert){alert.hidden=false;alert.textContent="No se pudo cargar PowerApp_Data.json desde RoadMap. Revisa la consola del navegador."}
+  }
+}
+
 document.addEventListener("DOMContentLoaded",start);
