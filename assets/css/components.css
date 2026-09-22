@@ -1,1 +1,59 @@
+.navbar{
+    height:70px;*    background:white;
+    display:*lex;
+    justify-content:space-bet*een;
+    align-items:center;
+    p*dding:0 24px;
+    box-shadow:0 2px*8px rgba(0,0,0,.08);
+}
+
+.navbar im*{
+    height:40px;
+}
+
+.navbar-left*
+    display:flex;
+    gap:12px;
+ *  align-items:center;
+}
+
+.sidebar{*    width:260px;
+    position:fixe*;
+    left:0;
+    top:0;
+    botto*:0;
+    background:white;
+    box-*hadow:0 2px 8px rgba(0,0,0,.08);
+}*
+.sidebar-logo{
+    padding:24px;
+*   text-align:center;
+}
+
+.sidebar-*ogo img{
+    width:80px;
+}
+
+.sideb*r nav{
+    display:flex;
+    flex-*irection:column;
+}
+
+.sidebar nav a*
+    padding:16px 24px;
+    text-d*coration:none;
+    color:#333;
+}
+
+*sidebar nav a:hover{
+    backgroun*:#f2f4f6;
+}
+
+.footer{
+    margin-t*p:40px;
+    background:white;
+    *adding:20px;
+    display:flex;
+    justify-content:space-between;
+}
 
