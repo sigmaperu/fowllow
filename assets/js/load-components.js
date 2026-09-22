@@ -1,0 +1,1 @@
+async function loadComponent(id,path){const r=await fetch(path);document.getElementById(id).innerHTML=await r.text();}document.addEventListener('DOMContentLoaded',async()=>{await loadComponent('sidebar','../components/sidebar.html');await loadComponent('navbar','../components/navbar.html');await loadComponent('footer','../components/footer.html');});
