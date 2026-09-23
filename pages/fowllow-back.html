@@ -1,38 +1,114 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fowllow Back</title>
-<link rel="stylesheet" href="../components/theme.css">
-<link rel="stylesheet" href="../components/main.css">
-<link rel="stylesheet" href="../components/layout.css">
-<link rel="stylesheet" href="../components/components.css">
-<link rel="stylesheet" href="../assets/css/fowllow-back.css">
-<link rel="stylesheet" href="../assets/css/sidebar-notch.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Perfil del creador de Fowllow y canales de contacto.">
+  <title>Fowllow Back | Monitoreo GreenMile</title>
+  <link rel="stylesheet" href="../components/theme.css?v=back-final">
+  <link rel="stylesheet" href="../components/main.css?v=back-final">
+  <link rel="stylesheet" href="../components/layout.css?v=back-final">
+  <link rel="stylesheet" href="../components/components.css?v=back-final">
+  <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=back-final">
+  <link rel="stylesheet" href="../assets/css/fowllow-back.css?v=back-final">
 </head>
 <body data-page="fowllow-back">
-<div id="sidebar"></div>
-<div class="gm-shell"><div id="navbar"></div>
-<main class="gm-content">
-<section class="fb-hero">
-<h1>Fowllow Back</h1>
-<p class="fb-tag">Track. Analyze. Deliver.</p>
-<img src="../assets/img/Avatar.png" alt="Avatar" class="fb-avatar">
-<h2>MarcⓊ Dávila</h2>
-<p>Coordinador de Distribución</p>
-<p>Coordinador de Distribución especializado en inteligencia logística, analítica operacional y transformación digital. Creador de Fowllow, una plataforma desarrollada sobre RoadMap y GreenMile para convertir datos operativos en decisiones rápidas, visuales y accionables.</p>
-</section>
-<section>
-<h3>Tecnologías</h3>
-<p>RoadMap · GreenMile · Power BI · Power Apps · JavaScript · Analytics</p>
-</section>
-<section>
-<h3>Conecta conmigo</h3>
-<p><a href="https://teams.microsoft.com/l/chat/0/0?users=mdavilab@sigma-alimentos.com">🟦 Teams</a></p>
-<p><a href="https://www.linkedin.com/in/marco-davila-barrios">💼 LinkedIn</a></p>
-<p><a href="https://wa.me/51946397037">🟢 WhatsApp</a></p>
-</section>
-</main><div id="footer"></div></div>
-<script src="../assets/js/load-components.js"></script>
-</body></html>
+  <div id="sidebar"></div>
+  <div class="gm-shell">
+    <div id="navbar"></div>
+
+    <main class="gm-content fb-page">
+      <section class="fb-card" aria-labelledby="profileName">
+        <div class="fb-card__visual">
+          <img class="fb-logo" src="../assets/img/Ofowllow.png" alt="Fowllow">
+          <p class="fb-tag">Track. Analyze. Deliver.</p>
+
+          <div class="fb-avatar-shell">
+            <img src="../assets/img/Avatar.png" alt="Avatar de MarcⓊ Dávila" class="fb-avatar">
+          </div>
+          <span class="fb-signature">Distribution Intelligence</span>
+        </div>
+
+        <div class="fb-card__content">
+          <p class="fb-kicker">Behind the platform</p>
+          <h1 id="profileName">MarcⓊ Dávila</h1>
+          <p class="fb-role">Coordinador de Distribución</p>
+
+          <p class="fb-description">Coordinador de Distribución especializado en inteligencia logística, analítica operacional y transformación digital. Creador de Fowllow, una plataforma desarrollada sobre RoadMap y GreenMile para convertir datos operativos en decisiones rápidas, visuales y accionables.</p>
+
+          <div class="fb-stack" aria-label="Tecnologías de Fowllow">
+            <span>RoadMap</span>
+            <span>GreenMile</span>
+            <span>Power BI</span>
+            <span>Power Apps</span>
+            <span>JavaScript</span>
+            <span>Analytics</span>
+          </div>
+
+          <section class="fb-connect" aria-labelledby="connectTitle">
+            <p class="fb-kicker">Connect</p>
+            <h2 id="connectTitle">Conecta conmigo</h2>
+
+            <div class="fb-contact-grid">
+              <a class="fb-contact fb-contact--teams" href="https://teams.microsoft.com/l/chat/0/0?users=mdavilab@sigma-alimentos.com" target="_blank" rel="noopener noreferrer" aria-label="Abrir Microsoft Teams">
+                <span class="fb-contact__icon" aria-hidden="true">
+                  <svg viewBox="0 0 48 48">
+                    <rect x="5" y="13" width="25" height="27" rx="5" fill="#6264A7"/>
+                    <path d="M12 19h14v5h-4.6v11h-4.8V24H12z" fill="#fff"/>
+                    <circle cx="35.5" cy="12" r="6" fill="#7B83EB"/>
+                    <path d="M31 21h10a4 4 0 0 1 4 4v8a8 8 0 0 1-8 8h-6z" fill="#7B83EB"/>
+                  </svg>
+                </span>
+                <span class="fb-contact__text"><strong>Microsoft Teams</strong><small>mdavilab@sigma-alimentos.com</small></span>
+                <span class="fb-contact__arrow" aria-hidden="true">↗</span>
+              </a>
+
+              <a class="fb-contact fb-contact--linkedin" href="https://www.linkedin.com/in/marco-davila-barrios" target="_blank" rel="noopener noreferrer" aria-label="Abrir LinkedIn">
+                <span class="fb-contact__icon" aria-hidden="true">
+                  <svg viewBox="0 0 48 48">
+                    <rect x="4" y="4" width="40" height="40" rx="8" fill="#0A66C2"/>
+                    <circle cx="15" cy="17" r="3" fill="#fff"/>
+                    <path d="M12.5 22h5v14h-5zm8 0h4.8v1.9c1.4-1.8 3.2-2.5 5.5-2.5 5 0 6.7 3.2 6.7 8.1V36h-5v-5.8c0-2.8-.6-4.6-3.3-4.6-3 0-3.7 2.1-3.7 4.9V36h-5z" fill="#fff"/>
+                  </svg>
+                </span>
+                <span class="fb-contact__text"><strong>LinkedIn</strong><small>marco-davila-barrios</small></span>
+                <span class="fb-contact__arrow" aria-hidden="true">↗</span>
+              </a>
+
+              <a class="fb-contact fb-contact--whatsapp" href="https://wa.me/51946397037" target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp">
+                <span class="fb-contact__icon" aria-hidden="true">
+                  <svg viewBox="0 0 48 48">
+                    <circle cx="24" cy="24" r="20" fill="#25D366"/>
+                    <path d="M14.1 36.3l1.7-6A12.7 12.7 0 1 1 20.5 35zm6.7-4.7.4.2a9.5 9.5 0 1 0-2.4-2.3l.3.5-.9 3.1z" fill="#fff"/>
+                    <path d="M20.1 18.5c.3-.7.7-.7 1.1-.7h.8c.3 0 .6.1.8.7l1.3 3.1c.2.5.1.8-.2 1.2l-1 1.2c-.3.3-.2.6 0 1 1 1.7 2.4 3.1 4.2 4 .4.2.7.2 1-.2l1.5-1.8c.3-.4.7-.4 1.1-.2l3 1.4c.5.2.7.4.7.7 0 .5-.3 2.6-1.7 3.6-1.1.8-2.5 1.2-4 .8-1.1-.3-4.9-1.5-8.2-4.5-2.6-2.3-4.3-5.2-4.8-6.1-.5-.9-.1-3.3.4-4.2z" fill="#fff"/>
+                  </svg>
+                </span>
+                <span class="fb-contact__text"><strong>WhatsApp</strong><small>+51 946 397 037</small></span>
+                <span class="fb-contact__arrow" aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="fb-journey" aria-labelledby="journeyTitle">
+        <div>
+          <p class="fb-kicker">Product journey</p>
+          <h2 id="journeyTitle">El recorrido de Fowllow</h2>
+        </div>
+        <ol class="fb-timeline">
+          <li><span>01</span><strong>Dashboard</strong></li>
+          <li><span>02</span><strong>Vehículos</strong></li>
+          <li><span>03</span><strong>Rutas</strong></li>
+          <li><span>04</span><strong>Clientes</strong></li>
+          <li class="is-current"><span>05</span><strong>Fowllow Back</strong></li>
+        </ol>
+      </section>
+    </main>
+
+    <div id="footer"></div>
+  </div>
+
+  <script src="../assets/js/load-components.js?v=back-final"></script>
+</body>
+</html>
