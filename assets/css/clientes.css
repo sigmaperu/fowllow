@@ -6,3 +6,17 @@
 .cl-badge{display:inline-flex;align-items:center;min-height:25px;padding:4px 8px;border-radius:999px;font-size:.66rem;font-weight:750;white-space:nowrap}.cl-badge--delivered{color:#05603a;background:#dcfce7}.cl-badge--rejected{color:#b42318;background:#fee4e2}.cl-badge--pending{color:#9a6700;background:#fff3cd}.cl-badge--unknown{color:#475569;background:#eef2f6}
 .leaflet-control-attribution{font-size:9px!important}
 @media(max-width:760px){.cl-visible-count{width:100%;margin-left:0;padding-bottom:0}.cl-group-switch{width:100%}.cl-group-switch__button{flex:1}.cl-selector-wrap,.cl-controls select,.cl-controls input{width:100%}.cl-map{min-height:390px;height:54vh}}
+
+/* Fase 12.3: interacción bidireccional mapa ↔ tabla */
+.cl-table tbody tr[data-client-key]{cursor:pointer;outline:none;transition:background-color .16s ease,box-shadow .16s ease}
+.cl-table tbody tr[data-client-key].is-hovered>td{background:#f1f7ff}
+.cl-table tbody tr[data-client-key].is-selected>td{background:#e6f0ff}
+.cl-table tbody tr[data-client-key].is-selected>td:first-child{box-shadow:inset 4px 0 0 #2563eb}
+.cl-table tbody tr[data-client-key]:focus-visible{outline:3px solid rgba(37,99,235,.32);outline-offset:-3px}
+.cl-popup{display:grid;gap:3px;min-width:190px;padding:2px 0;color:#172033}
+.cl-popup__label{margin-top:5px;color:#64748b;font-size:.66rem;font-weight:750;text-transform:uppercase;letter-spacing:.035em}
+.cl-popup__account{color:#123d66;font-size:.92rem}
+.cl-popup__name{max-width:250px;font-size:.82rem;line-height:1.35}
+.leaflet-popup-content{margin:13px 16px}
+.leaflet-popup-content-wrapper{border-radius:14px;box-shadow:0 10px 28px rgba(15,23,42,.18)}
+
