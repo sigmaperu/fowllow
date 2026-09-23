@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Vista operativa de clientes y mapa GreenMile">
+  <meta name="description" content="Mapa operativo de clientes GreenMile por placa o ruta">
   <title>Clientes | Monitoreo GreenMile</title>
-  <link rel="stylesheet" href="../components/theme.css?v=12">
-  <link rel="stylesheet" href="../components/main.css?v=12">
-  <link rel="stylesheet" href="../components/layout.css?v=12">
-  <link rel="stylesheet" href="../components/components.css?v=12">
-  <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=12">
-  <link rel="stylesheet" href="../assets/css/clientes.css?v=12">
+  <link rel="stylesheet" href="../components/theme.css?v=12-1">
+  <link rel="stylesheet" href="../components/main.css?v=12-1">
+  <link rel="stylesheet" href="../components/layout.css?v=12-1">
+  <link rel="stylesheet" href="../components/components.css?v=12-1">
+  <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=12-1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="../assets/css/clientes.css?v=12-1">
 </head>
 <body data-page="clientes">
   <div id="sidebar"></div>
@@ -19,61 +20,58 @@
     <main class="gm-content">
       <header class="gm-heading">
         <h1>Clientes</h1>
-        <p>Detalle operativo y geolocalización de clientes.</p>
+        <p>Mapa operativo por placa o ruta.</p>
       </header>
 
       <div id="clientsError" class="gm-alert" role="alert" hidden></div>
 
-      <section class="cl-toolbar" aria-label="Filtros de clientes">
+      <section class="cl-controls" aria-label="Selección del mapa">
+        <div class="cl-group-switch" role="group" aria-label="Agrupar clientes por">
+          <button type="button" class="cl-group-switch__button is-active" data-group="vehicle" aria-pressed="true">Por placa</button>
+          <button type="button" class="cl-group-switch__button" data-group="route" aria-pressed="false">Por ruta</button>
+        </div>
+
+        <label class="cl-selector-wrap">
+          <span id="groupLabel" class="cl-selector-label">Selecciona una placa</span>
+          <select id="groupSelector">
+            <option value="">Selecciona una placa</option>
+          </select>
+        </label>
+
         <label class="cl-search">
           <span class="cl-sr-only">Buscar cliente</span>
-          <input id="clientSearch" type="search" placeholder="Buscar cuenta, nombre o envío…" autocomplete="off">
+          <input id="clientSearch" type="search" placeholder="Buscar cuenta o cliente…" autocomplete="off" disabled>
         </label>
-        <label><span class="cl-sr-only">Filtrar por canal</span><select id="channelFilter"><option value="">Todos los Canales</option></select></label>
-        <label><span class="cl-sr-only">Filtrar por estado</span><select id="statusFilter"><option value="">Todos los Estados</option><option>ENTREGADO</option><option>RECHAZADO</option><option>PENDIENTE</option><option>SIN INFORMACION</option></select></label>
-        <div class="cl-segmented" role="group" aria-label="Alcance de clientes">
-          <button type="button" class="cl-segmented__button" data-scope="MIGRADOS" aria-pressed="false">Migrados</button>
-          <button type="button" class="cl-segmented__button" data-scope="NO_MIGRADOS" aria-pressed="false">No Migrados</button>
-          <button type="button" class="cl-segmented__button is-active" data-scope="PLANIFICADOS" aria-pressed="true">Planificados</button>
-        </div>
-        <span id="visibleCount" class="cl-visible-count"></span>
+        <span id="visibleCount" class="cl-visible-count">Selecciona una placa para cargar clientes</span>
       </section>
 
-      <section class="cl-layout">
-        <div class="cl-table-wrap" aria-label="Listado de clientes">
-          <table class="cl-table">
-            <thead><tr>
-              <th><button class="cl-sort" data-sort="account">Cuenta <span>↕</span></button></th>
-              <th><button class="cl-sort" data-sort="name">Cliente <span>↕</span></button></th>
-              <th><button class="cl-sort" data-sort="shipment">Envío <span>↕</span></button></th>
-              <th><button class="cl-sort" data-sort="route">Ruta <span>↕</span></button></th>
-              <th><button class="cl-sort" data-sort="channel">Canal <span>↕</span></button></th>
-              <th><button class="cl-sort" data-sort="status">Estado <span>↕</span></button></th>
-              <th><button class="cl-sort" data-sort="migration">Migración <span>↕</span></button></th>
-              <th><button class="cl-sort" data-sort="kg">Kg <span>↕</span></button></th>
-              <th>Mapa</th>
-            </tr></thead>
-            <tbody id="clientTable"><tr><td colspan="9" class="cl-empty">Cargando datos…</td></tr></tbody>
-          </table>
+      <section class="cl-map-card" aria-label="Mapa de clientes">
+        <div id="clientMap" class="cl-map">
+          <div class="cl-map-empty"><span>⌖</span><strong>Selecciona una placa o ruta</strong><small>El mapa cargará únicamente los clientes de la selección.</small></div>
         </div>
+      </section>
 
-        <aside class="cl-map-panel" aria-label="Mapa operativo">
-          <header class="cl-map-header">
-            <div><h2>Mapa operativo</h2><p id="mapSelection">Selecciona un cliente en la tabla.</p></div>
-            <div class="cl-legend"><span><i class="cl-dot cl-dot--client"></i>Cliente</span><span><i class="cl-dot cl-dot--operation"></i>Operación</span></div>
-          </header>
-          <div id="clientMap" class="cl-map" role="img" aria-label="Mapa de ubicación de cliente y posición operativa">
-            <div class="cl-map-placeholder"><span>⌖</span><strong>Sin cliente seleccionado</strong><small>Usa el botón “Ver” de la tabla.</small></div>
-          </div>
-          <dl id="mapDetails" class="cl-map-details">
-            <div><dt>Cliente</dt><dd>—</dd></div><div><dt>Coordenada cliente</dt><dd>—</dd></div><div><dt>Posición operativa</dt><dd>—</dd></div>
-          </dl>
-        </aside>
+      <section class="cl-table-wrap" aria-label="Clientes de la selección">
+        <table class="cl-table">
+          <thead><tr>
+            <th><button class="cl-sort" data-sort="account">Cuenta <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="name">Cliente <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="location">Location <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="vehicle">Placa <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="channel">Canal <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="route">Ruta <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="status">Estado <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="kg">Kg <span>↕</span></button></th>
+          </tr></thead>
+          <tbody id="clientTable"><tr><td colspan="8" class="cl-empty">Selecciona una placa o ruta para mostrar clientes.</td></tr></tbody>
+        </table>
       </section>
     </main>
     <div id="footer"></div>
   </div>
-  <script src="../assets/js/load-components.js?v=12"></script>
-  <script type="module" src="../assets/js/clientes.js?v=12"></script>
+
+  <script src="../assets/js/load-components.js?v=12-1"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script type="module" src="../assets/js/clientes.js?v=12-1"></script>
 </body>
 </html>
