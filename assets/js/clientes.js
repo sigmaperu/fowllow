@@ -10,6 +10,7 @@ let groupMode="vehicle";
 let sortState={key:"account",direction:1};
 let allRows=[];
 let currentClients=[];
+let visibleClients=[];
 let map=null;
 let markerLayer=null;
 let selectedClientKey=null;
@@ -42,6 +43,10 @@ function escapeHtml(v){
   }[c]));
 }
 
+function firstValue(rows,field,fallback="—"){
+  return rows.map(row=>text(row[field])).find(Boolean)||fallback;
+}
+
 function clientState(rows){
   const states=rows.map(r=>clean(r.EstadoEntrega));
   if(states.includes("ENTREGADO"))return"ENTREGADO";
@@ -51,7 +56,9 @@ function clientState(rows){
 }
 
 function keyForSelection(row){
-  return groupMode==="vehicle"?text(row.VehicleKey):text(row.RutaVenta);
+  if(groupMode==="vehicle")return text(row.VehicleKey);
+  if(groupMode==="route")return text(row.RutaVenta);
+  return text(row.CustomerAccount);
 }
 
 function selectionLabel(){
@@ -78,6 +85,8 @@ function buildClients(rows){
       vehicle:text(r.VehicleKey)||"—",
       channel:text(r.Canal)||"—",
       route:text(r.RutaVenta)||"—",
+      driverName:firstValue(group,"DriverName"),
+      driverBadge:firstValue(group,"DriverBadge"),
       status:clientState(group),
       kg:group.reduce((sum,item)=>sum+numeric(item.KgPlanificados),0),
       latitude:group.map(item=>coordinate(item.Latitude)).find(value=>value!==null)??null,
@@ -117,7 +126,7 @@ function rowForClient(key){
 }
 
 function clientForKey(key){
-  return currentClients.find(client=>client.key===key)??null;
+  return visibleClients.find(client=>client.key===key)??null;
 }
 
 function markerOptions(client,state="normal"){
@@ -163,14 +172,7 @@ function popupContent(client){
 function selectClient(key,{source="table",openPopup=true}={}){
   const client=clientForKey(key);
   if(!client)return;
-
   selectedClientKey=key;
-
-  if(source==="marker"&&!rowForClient(key)){
-    byId("clientSearch").value="";
-    renderTable();
-  }
-
   syncVisualState();
 
   const marker=markersByClient.get(key);
@@ -181,7 +183,6 @@ function selectClient(key,{source="table",openPopup=true}={}){
     }
     if(openPopup)marker.openPopup();
   }
-
   if(source==="marker")scrollRowIntoView(key);
 }
 
@@ -196,39 +197,47 @@ function clearHover(key){
   syncVisualState();
 }
 
-function renderTable(){
-  const q=clean(byId("clientSearch").value);
-  const filtered=currentClients.filter(client=>!q||clean(`${client.account} ${client.name}`).includes(q));
-  const items=sorted(filtered);
-  const visibleKeys=new Set(items.map(client=>client.key));
+function renderTable(items=visibleClients){
+  const ordered=sorted(items);
+  byId("visibleCount").textContent=`${ordered.length} de ${currentClients.length} clientes`;
 
-  if(selectedClientKey&&!visibleKeys.has(selectedClientKey)){
-    selectedClientKey=null;
-    if(map)map.closePopup();
-  }
-  if(hoveredClientKey&&!visibleKeys.has(hoveredClientKey))hoveredClientKey=null;
-
-  byId("visibleCount").textContent=`${items.length} de ${currentClients.length} clientes`;
-
-  if(!items.length){
-    byId("clientTable").innerHTML='<tr><td colspan="8" class="cl-empty">No hay clientes para la búsqueda.</td></tr>';
+  if(!ordered.length){
+    const message=groupMode==="client"&&!clean(byId("clientSearch").value)
+      ?"Escribe un código de cliente para iniciar la búsqueda."
+      :"No hay clientes para la selección y filtros aplicados.";
+    byId("clientTable").innerHTML=`<tr><td colspan="10" class="cl-empty">${message}</td></tr>`;
+    updateHeads();
     syncVisualState();
     return;
   }
 
-  byId("clientTable").innerHTML=items.map(client=>`<tr data-client-key="${escapeHtml(client.key)}" tabindex="0" aria-selected="false" title="Seleccionar cliente en el mapa">
+  byId("clientTable").innerHTML=ordered.map(client=>`<tr data-client-key="${escapeHtml(client.key)}" tabindex="0" aria-selected="false" title="Seleccionar cliente en el mapa">
     <td class="cl-key">${escapeHtml(client.account)}</td>
     <td class="cl-name" title="${escapeHtml(client.name)}">${escapeHtml(client.name)}</td>
     <td>${escapeHtml(client.location)}</td>
     <td>${escapeHtml(client.vehicle)}</td>
     <td>${escapeHtml(client.channel)}</td>
     <td>${escapeHtml(client.route)}</td>
+    <td class="cl-name" title="${escapeHtml(client.driverName)}">${escapeHtml(client.driverName)}</td>
+    <td class="cl-contact">${escapeHtml(client.driverBadge)}</td>
     <td>${badge(client.status)}</td>
     <td>${number.format(client.kg)}</td>
   </tr>`).join("");
 
   updateHeads();
   syncVisualState();
+}
+
+function removeMap(){
+  if(map)map.remove();
+  map=null;
+  markerLayer=null;
+  markersByClient.clear();
+}
+
+function showMapEmpty(title,detail){
+  removeMap();
+  byId("clientMap").innerHTML=`<div class="cl-map-empty"><span>⌖</span><strong>${escapeHtml(title)}</strong><small>${escapeHtml(detail)}</small></div>`;
 }
 
 function ensureMap(){
@@ -242,7 +251,18 @@ function ensureMap(){
   markerLayer=L.layerGroup().addTo(map);
 }
 
-function renderMap(){
+function renderMap(items=visibleClients){
+  if(!items.length){
+    const title=groupMode==="client"&&!clean(byId("clientSearch").value)
+      ?"Busca un código de cliente"
+      :"Sin clientes para mostrar";
+    const detail=groupMode==="client"&&!clean(byId("clientSearch").value)
+      ?"Introduce el código de cliente para cargar el mapa."
+      :"Ajusta la selección o los filtros.";
+    showMapEmpty(title,detail);
+    return;
+  }
+
   ensureMap();
   if(!map){
     byId("clientMap").innerHTML='<div class="cl-map-empty"><span>⌖</span><strong>No se pudo cargar el mapa</strong><small>Revisa la conexión del navegador.</small></div>';
@@ -253,16 +273,14 @@ function renderMap(){
   markersByClient.clear();
   const bounds=[];
 
-  currentClients.forEach(client=>{
+  items.forEach(client=>{
     if(client.latitude===null||client.longitude===null)return;
-
     const marker=L.circleMarker([client.latitude,client.longitude],markerOptions(client))
       .bindPopup(popupContent(client),{maxWidth:280,closeButton:true})
       .on("click",()=>selectClient(client.key,{source:"marker",openPopup:true}))
       .on("mouseover",()=>hoverClient(client.key))
       .on("mouseout",()=>clearHover(client.key))
       .addTo(markerLayer);
-
     markersByClient.set(client.key,marker);
     bounds.push([client.latitude,client.longitude]);
   });
@@ -285,30 +303,102 @@ function resetInteraction(){
   if(map)map.closePopup();
 }
 
-function loadSelection(){
-  const selected=byId("groupSelector").value;
-  resetInteraction();
+function filteredClients(){
+  const q=clean(byId("clientSearch").value);
+  const channel=clean(byId("channelFilter").value);
+  const status=clean(byId("statusFilter").value);
 
-  if(!selected){
-    currentClients=[];
-    byId("clientSearch").disabled=true;
-    byId("clientSearch").value="";
-    byId("visibleCount").textContent=`Selecciona una ${selectionLabel()} para cargar clientes`;
-    byId("clientTable").innerHTML=`<tr><td colspan="8" class="cl-empty">Selecciona una ${selectionLabel()} para mostrar clientes.</td></tr>`;
-    if(map){map.remove();map=null;markerLayer=null;}
-    byId("clientMap").innerHTML=`<div class="cl-map-empty"><span>⌖</span><strong>Selecciona una placa o ruta</strong><small>El mapa cargará únicamente los clientes de la selección.</small></div>`;
+  if(groupMode==="client"&&!q)return[];
+
+  return currentClients.filter(client=>{
+    const matchesQuery=!q||(groupMode==="client"
+      ?clean(client.account).includes(q)
+      :clean(`${client.account} ${client.name}`).includes(q));
+    const matchesChannel=!channel||clean(client.channel)===channel;
+    const matchesStatus=!status||clean(client.status)===status;
+    return matchesQuery&&matchesChannel&&matchesStatus;
+  });
+}
+
+function applyView(){
+  visibleClients=filteredClients();
+  const visibleKeys=new Set(visibleClients.map(client=>client.key));
+  if(selectedClientKey&&!visibleKeys.has(selectedClientKey))selectedClientKey=null;
+  if(hoveredClientKey&&!visibleKeys.has(hoveredClientKey))hoveredClientKey=null;
+  renderTable(visibleClients);
+  renderMap(visibleClients);
+}
+
+function setControlsEnabled(enabled){
+  byId("clientSearch").disabled=!enabled;
+  byId("channelFilter").disabled=!enabled;
+  byId("statusFilter").disabled=!enabled;
+}
+
+function clearFilters(){
+  byId("clientSearch").value="";
+  byId("channelFilter").value="";
+  byId("statusFilter").value="";
+}
+
+function loadSelection(){
+  resetInteraction();
+  const selected=byId("groupSelector").value;
+
+  if(groupMode==="client"){
+    currentClients=buildClients(allRows);
+    setControlsEnabled(true);
+    byId("clientSearch").placeholder="Buscar por código de cliente…";
+    applyView();
     return;
   }
 
-  const rows=allRows.filter(row=>keyForSelection(row)===selected);
-  currentClients=buildClients(rows);
-  byId("clientSearch").disabled=false;
-  renderMap();
-  renderTable();
+  if(!selected){
+    currentClients=[];
+    visibleClients=[];
+    setControlsEnabled(false);
+    clearFilters();
+    byId("clientSearch").placeholder="Buscar cuenta o cliente…";
+    byId("visibleCount").textContent=`Selecciona una ${selectionLabel()} para cargar clientes`;
+    byId("clientTable").innerHTML=`<tr><td colspan="10" class="cl-empty">Selecciona una ${selectionLabel()} para mostrar clientes.</td></tr>`;
+    showMapEmpty("Selecciona una placa o ruta","El mapa cargará únicamente los clientes de la selección.");
+    return;
+  }
+
+  currentClients=buildClients(allRows.filter(row=>keyForSelection(row)===selected));
+  setControlsEnabled(true);
+  byId("clientSearch").placeholder="Buscar cuenta o cliente…";
+  applyView();
+}
+
+function populateChannelFilter(){
+  const selector=byId("channelFilter");
+  selector.innerHTML='<option value="">Todos los canales</option>';
+  [...new Set(allRows.map(row=>text(row.Canal)).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,"es"))
+    .forEach(value=>{
+      const option=document.createElement("option");
+      option.value=value;
+      option.textContent=value;
+      selector.appendChild(option);
+    });
 }
 
 function populateSelector(){
   const selector=byId("groupSelector");
+  const wrapper=byId("groupSelectorWrap");
+  clearFilters();
+
+  if(groupMode==="client"){
+    wrapper.hidden=true;
+    selector.disabled=true;
+    loadSelection();
+    byId("clientSearch").focus();
+    return;
+  }
+
+  wrapper.hidden=false;
+  selector.disabled=false;
   const label=selectionLabel();
   byId("groupLabel").textContent=`Selecciona una ${label}`;
   selector.innerHTML=`<option value="">Selecciona una ${label}</option>`;
@@ -363,13 +453,15 @@ function wire(){
   }));
 
   byId("groupSelector").addEventListener("change",loadSelection);
-  byId("clientSearch").addEventListener("input",renderTable);
+  byId("clientSearch").addEventListener("input",applyView);
+  byId("channelFilter").addEventListener("change",applyView);
+  byId("statusFilter").addEventListener("change",applyView);
 
   document.querySelectorAll(".cl-sort").forEach(button=>button.addEventListener("click",()=>{
     const key=button.dataset.sort;
     if(sortState.key===key)sortState.direction*=-1;
     else sortState={key,direction:1};
-    renderTable();
+    renderTable(visibleClients);
   }));
 
   wireTableInteraction();
@@ -384,6 +476,7 @@ async function init(){
   try{
     const[rows]=await Promise.all([loadPowerAppData(),waitComponents()]);
     allRows=rows;
+    populateChannelFilter();
     wire();
     populateSelector();
     byId("operationDate").textContent=operationDate(rows);
