@@ -52,51 +52,7 @@ function applyView(){const channel=clean(byId("channelFilter").value),status=cle
 function updateFilterCount(){const count=Number(Boolean(byId("channelFilter").value))+Number(Boolean(byId("statusFilter").value));byId("filterCount").textContent=String(count);byId("filterCount").hidden=!count;}
 function populateQuickSelect(mode){const selector=byId("quickSearchSelect");const field=mode==="vehicle"?"vehicle":"route";const label=mode==="vehicle"?"Selecciona una placa":"Selecciona una ruta";const values=[...new Set(allClients.map(client=>text(client[field])).filter(value=>value&&value!=="—"))].sort(collator.compare);selector.innerHTML="";selector.add(new Option(label,""));values.forEach(value=>selector.add(new Option(value,value)));selector.value="";}
 function updateSearchControl(){const mode=byId("searchMode").value,input=byId("quickSearch"),selector=byId("quickSearchSelect"),button=byId("searchButton");const usesSelect=mode==="vehicle"||mode==="route";const usesInput=mode==="client";input.hidden=!usesInput;input.disabled=!usesInput;selector.hidden=!usesSelect;selector.disabled=!usesSelect;input.value="";if(usesSelect)populateQuickSelect(mode);else{selector.innerHTML='<option value="">Selecciona una opción</option>';selector.value="";}input.placeholder=usesInput?"Ej. 6244872":"Vista general";button.disabled=mode==="all"||(usesSelect?!selector.value:!input.value.trim());if(mode==="all")applyView();else if(usesInput)input.focus();else selector.focus();}
-function updateSearchControl(){
-  const mode=byId("searchMode").value,
-        input=byId("quickSearch"),
-        selector=byId("quickSearchSelect"),
-        button=byId("searchButton");
-
-  if(mode==="all"){
-    input.hidden=false;
-    input.disabled=true;
-    input.value="";
-    input.placeholder="Vista general";
-
-    selector.hidden=true;
-    selector.disabled=true;
-    selector.value="";
-
-    button.disabled=true;
-    applyView();
-    return;
-  }
-
-  if(mode==="client"){
-    input.hidden=false;
-    input.disabled=false;
-
-    selector.hidden=true;
-    selector.disabled=true;
-    selector.value="";
-
-    button.disabled=!input.value.trim();
-    input.focus();
-    return;
-  }
-
-  input.hidden=true;
-  input.disabled=true;
-
-  selector.hidden=false;
-  selector.disabled=false;
-
-  populateQuickSelect(mode);
-
-  button.disabled=!selector.value;
-  selector.focus();
-}
+function clearAll(){byId("searchMode").value="all";byId("quickSearch").value="";byId("quickSearchSelect").value="";byId("channelFilter").value="";byId("statusFilter").value="";byId("filtersPanel").open=false;resetInteraction();updateSearchControl();}
 function populateChannelFilter(){const selector=byId("channelFilter");selector.innerHTML='<option value="">Todos los canales</option>';[...new Set(allClients.map(c=>c.channel).filter(v=>v&&v!=="—"))].sort(collator.compare).forEach(value=>selector.add(new Option(value,value)));}
 function csvCell(v){const value=String(v??"");return /[";\n\r]/.test(value)?`"${value.replace(/"/g,'""')}"`:value;}
 function downloadCsv(){if(!visibleClients.length)return;const header=["Cuenta","Cliente","Location","Placa","Canal","Ruta","DriverName","DriverBadge","Estado","Kg"];const rows=sorted(visibleClients).map(c=>[c.account,c.name,c.location,c.vehicle,c.channel,c.route,c.driverName,c.driverBadge,c.status,String(c.kg).replace(".",",")]);const csv="\uFEFF"+[header,...rows].map(row=>row.map(csvCell).join(";")).join("\r\n");const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})),a=document.createElement("a");a.href=url;a.download=`clientes-greenmile-${new Date().toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),0);}
