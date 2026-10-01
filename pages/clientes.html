@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="../assets/img/favicon.png">
-  <meta name="description" content="Mapa operativo de clientes GreenMile por placa o ruta">
+  <meta name="description" content="Mapa operativo de clientes GreenMile por placa, ruta o código de cliente">
   <title>Clientes | Monitoreo GreenMile</title>
   <link rel="stylesheet" href="../components/theme.css?v=12-1">
   <link rel="stylesheet" href="../components/main.css?v=12-1">
@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="../components/components.css?v=12-1">
   <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=12-1">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="../assets/css/clientes.css?v=12-3">
+  <link rel="stylesheet" href="../assets/css/clientes.css?v=12-4">
 </head>
 <body data-page="clientes">
   <div id="sidebar"></div>
@@ -21,21 +21,40 @@
     <main class="gm-content">
       <header class="gm-heading">
         <h1>Clientes</h1>
-        <p>Mapa operativo por placa o ruta.</p>
+        <p>Mapa operativo por placa, ruta o código de cliente.</p>
       </header>
 
       <div id="clientsError" class="gm-alert" role="alert" hidden></div>
 
-      <section class="cl-controls" aria-label="Selección del mapa">
-        <div class="cl-group-switch" role="group" aria-label="Agrupar clientes por">
+      <section class="cl-controls" aria-label="Selección y filtros del mapa">
+        <div class="cl-group-switch" role="group" aria-label="Buscar clientes por">
           <button type="button" class="cl-group-switch__button is-active" data-group="vehicle" aria-pressed="true">Por placa</button>
           <button type="button" class="cl-group-switch__button" data-group="route" aria-pressed="false">Por ruta</button>
+          <button type="button" class="cl-group-switch__button" data-group="client" aria-pressed="false">Por cliente</button>
         </div>
 
-        <label class="cl-selector-wrap">
+        <label id="groupSelectorWrap" class="cl-selector-wrap">
           <span id="groupLabel" class="cl-selector-label">Selecciona una placa</span>
           <select id="groupSelector">
             <option value="">Selecciona una placa</option>
+          </select>
+        </label>
+
+        <label class="cl-filter-wrap">
+          <span class="cl-selector-label">Canal</span>
+          <select id="channelFilter" disabled>
+            <option value="">Todos los canales</option>
+          </select>
+        </label>
+
+        <label class="cl-filter-wrap">
+          <span class="cl-selector-label">Estado</span>
+          <select id="statusFilter" disabled>
+            <option value="">Todos los estados</option>
+            <option value="ENTREGADO">ENTREGADO</option>
+            <option value="RECHAZADO">RECHAZADO</option>
+            <option value="PENDIENTE">PENDIENTE</option>
+            <option value="SIN INFORMACION">SIN INFORMACIÓN</option>
           </select>
         </label>
 
@@ -48,7 +67,7 @@
 
       <section class="cl-map-card" aria-label="Mapa de clientes">
         <div id="clientMap" class="cl-map">
-          <div class="cl-map-empty"><span>⌖</span><strong>Selecciona una placa o ruta</strong><small>El mapa cargará únicamente los clientes de la selección.</small></div>
+          <div class="cl-map-empty"><span>⌖</span><strong>Selecciona una placa o ruta</strong><small>También puedes buscar directamente por código de cliente.</small></div>
         </div>
       </section>
 
@@ -61,10 +80,12 @@
             <th><button class="cl-sort" data-sort="vehicle">Placa <span>↕</span></button></th>
             <th><button class="cl-sort" data-sort="channel">Canal <span>↕</span></button></th>
             <th><button class="cl-sort" data-sort="route">Ruta <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="driverName">Driver Name (Auxiliar) <span>↕</span></button></th>
+            <th><button class="cl-sort" data-sort="driverBadge">Driver Badge (Celular) <span>↕</span></button></th>
             <th><button class="cl-sort" data-sort="status">Estado <span>↕</span></button></th>
             <th><button class="cl-sort" data-sort="kg">Kg <span>↕</span></button></th>
           </tr></thead>
-          <tbody id="clientTable"><tr><td colspan="8" class="cl-empty">Selecciona una placa o ruta para mostrar clientes.</td></tr></tbody>
+          <tbody id="clientTable"><tr><td colspan="10" class="cl-empty">Selecciona una placa o ruta, o busca un código de cliente.</td></tr></tbody>
         </table>
       </section>
     </main>
@@ -73,6 +94,6 @@
 
   <script src="../assets/js/load-components.js?v=12-1"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script type="module" src="../assets/js/clientes.js?v=12-3"></script>
+  <script type="module" src="../assets/js/clientes.js?v=12-4"></script>
 </body>
 </html>
