@@ -11,8 +11,10 @@
   <link rel="stylesheet" href="../components/layout.css?v=12-1">
   <link rel="stylesheet" href="../components/components.css?v=12-1">
   <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=12-1">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="../assets/css/clientes.css?v=12-4">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="../assets/css/clientes.css?v=12-5">
 </head>
 <body data-page="clientes">
   <div id="sidebar"></div>
@@ -21,79 +23,91 @@
     <main class="gm-content">
       <header class="gm-heading">
         <h1>Clientes</h1>
-        <p>Mapa operativo por placa, ruta o código de cliente.</p>
+        <p>Consulta operativa de clientes en mapa por placa, ruta o código.</p>
       </header>
 
       <div id="clientsError" class="gm-alert" role="alert" hidden></div>
 
-      <section class="cl-controls" aria-label="Selección y filtros del mapa">
-        <div class="cl-group-switch" role="group" aria-label="Buscar clientes por">
-          <button type="button" class="cl-group-switch__button is-active" data-group="vehicle" aria-pressed="true">Por placa</button>
-          <button type="button" class="cl-group-switch__button" data-group="route" aria-pressed="false">Por ruta</button>
-          <button type="button" class="cl-group-switch__button" data-group="client" aria-pressed="false">Por cliente</button>
+      <section class="cl-toolbar" aria-label="Búsqueda y acciones">
+        <div class="cl-quick-search">
+          <label class="cl-field cl-field--mode">
+            <span class="cl-label">Buscar por</span>
+            <select id="searchMode">
+              <option value="all">Todos los clientes</option>
+              <option value="vehicle">Placa exacta</option>
+              <option value="route">Ruta exacta</option>
+              <option value="client">Código de cliente</option>
+            </select>
+          </label>
+          <label class="cl-field cl-field--query">
+            <span class="cl-label">Valor</span>
+            <input id="quickSearch" type="search" placeholder="Vista general" autocomplete="off" disabled>
+          </label>
+          <button id="searchButton" type="button" class="cl-button cl-button--primary" disabled>Buscar</button>
         </div>
 
-        <label id="groupSelectorWrap" class="cl-selector-wrap">
-          <span id="groupLabel" class="cl-selector-label">Selecciona una placa</span>
-          <select id="groupSelector">
-            <option value="">Selecciona una placa</option>
-          </select>
-        </label>
-
-        <label class="cl-filter-wrap">
-          <span class="cl-selector-label">Canal</span>
-          <select id="channelFilter" disabled>
-            <option value="">Todos los canales</option>
-          </select>
-        </label>
-
-        <label class="cl-filter-wrap">
-          <span class="cl-selector-label">Estado</span>
-          <select id="statusFilter" disabled>
-            <option value="">Todos los estados</option>
-            <option value="ENTREGADO">ENTREGADO</option>
-            <option value="RECHAZADO">RECHAZADO</option>
-            <option value="PENDIENTE">PENDIENTE</option>
-            <option value="SIN INFORMACION">SIN INFORMACIÓN</option>
-          </select>
-        </label>
-
-        <label class="cl-search">
-          <span class="cl-sr-only">Buscar cliente</span>
-          <input id="clientSearch" type="search" placeholder="Buscar cuenta o cliente…" autocomplete="off" disabled>
-        </label>
-        <span id="visibleCount" class="cl-visible-count">Selecciona una placa para cargar clientes</span>
+        <div class="cl-actions">
+          <details id="filtersPanel" class="cl-filters">
+            <summary>Filtros <span id="filterCount" class="cl-filter-count" hidden>0</span></summary>
+            <div class="cl-filters__body">
+              <label class="cl-field">
+                <span class="cl-label">Canal</span>
+                <select id="channelFilter"><option value="">Todos los canales</option></select>
+              </label>
+              <label class="cl-field">
+                <span class="cl-label">Estado</span>
+                <select id="statusFilter">
+                  <option value="">Todos los estados</option>
+                  <option value="ENTREGADO">Entregado</option>
+                  <option value="PENDIENTE">Pendiente</option>
+                  <option value="RECHAZADO">Rechazado</option>
+                  <option value="SIN INFORMACION">Sin información</option>
+                </select>
+              </label>
+            </div>
+          </details>
+          <button id="clearButton" type="button" class="cl-button">Limpiar</button>
+          <button id="csvButton" type="button" class="cl-button" disabled>Descargar CSV</button>
+        </div>
       </section>
+
+      <div class="cl-summary" aria-live="polite">
+        <span id="visibleCount">Cargando clientes…</span>
+        <span id="coordinateCount"></span>
+      </div>
 
       <section class="cl-map-card" aria-label="Mapa de clientes">
         <div id="clientMap" class="cl-map">
-          <div class="cl-map-empty"><span>⌖</span><strong>Selecciona una placa o ruta</strong><small>También puedes buscar directamente por código de cliente.</small></div>
+          <div class="cl-map-empty"><span>⌖</span><strong>Cargando mapa</strong><small>Preparando la información operativa.</small></div>
         </div>
       </section>
 
-      <section class="cl-table-wrap" aria-label="Clientes de la selección">
-        <table class="cl-table">
-          <thead><tr>
-            <th><button class="cl-sort" data-sort="account">Cuenta <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="name">Cliente <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="location">Location <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="vehicle">Placa <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="channel">Canal <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="route">Ruta <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="driverName">Driver Name (Auxiliar) <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="driverBadge">Driver Badge (Celular) <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="status">Estado <span>↕</span></button></th>
-            <th><button class="cl-sort" data-sort="kg">Kg <span>↕</span></button></th>
-          </tr></thead>
-          <tbody id="clientTable"><tr><td colspan="10" class="cl-empty">Selecciona una placa o ruta, o busca un código de cliente.</td></tr></tbody>
-        </table>
+      <section class="cl-table-card" aria-label="Clientes filtrados">
+        <div class="cl-table-wrap">
+          <table class="cl-table">
+            <thead><tr>
+              <th><button class="cl-sort" data-sort="account">Cliente <span>↑</span></button></th>
+              <th><button class="cl-sort" data-sort="location">Ubicación <span>↕</span></button></th>
+              <th><button class="cl-sort" data-sort="vehicle">Operación <span>↕</span></button></th>
+              <th><button class="cl-sort" data-sort="driverName">Auxiliar <span>↕</span></button></th>
+              <th><button class="cl-sort" data-sort="status">Estado <span>↕</span></button></th>
+              <th class="cl-col-number"><button class="cl-sort" data-sort="kg">Kg <span>↕</span></button></th>
+            </tr></thead>
+            <tbody id="clientTable"><tr><td colspan="6" class="cl-empty">Cargando clientes…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="cl-table-footer">
+          <span id="renderCount">0 registros visibles</span>
+          <button id="loadMoreButton" type="button" class="cl-button" hidden>Mostrar 50 más</button>
+        </div>
       </section>
     </main>
     <div id="footer"></div>
   </div>
 
   <script src="../assets/js/load-components.js?v=12-1"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script type="module" src="../assets/js/clientes.js?v=12-4"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script type="module" src="../assets/js/clientes.js?v=12-5"></script>
 </body>
 </html>
