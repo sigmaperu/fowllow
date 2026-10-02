@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-  <link rel="stylesheet" href="../assets/css/clientes.css?v=12-5-2">
+  <link rel="stylesheet" href="../assets/css/clientes.css?v=12-5-3">
 </head>
 <body data-page="clientes">
   <div id="sidebar"></div>
@@ -48,11 +48,11 @@
           </label>
           <button id="searchButton" type="button" class="cl-button cl-button--primary" disabled>Buscar</button>
 
-          <!-- Switch segmentado: Migrados | No Migrados | Planificados -->
-          <div class="cl-segmented" role="group" aria-label="Filtro de migración">
-            <button type="button" class="cl-segmented__btn" data-migration="MIGRADO">Migrados</button>
-            <button type="button" class="cl-segmented__btn" data-migration="NO MIGRADO">No Migrados</button>
-            <button type="button" class="cl-segmented__btn is-active" data-migration="ALL">Planificados</button>
+          <!-- Switch segmentado idéntico a Vehículos -->
+          <div class="vh-segmented" role="group" aria-label="Alcance de migración">
+            <button type="button" class="vh-segmented__button" data-scope="MIGRADOS" aria-pressed="false">Migrados</button>
+            <button type="button" class="vh-segmented__button" data-scope="NO_MIGRADOS" aria-pressed="false">No Migrados</button>
+            <button type="button" class="vh-segmented__button is-active" data-scope="PLANIFICADOS" aria-pressed="true">Planificados</button>
           </div>
         </div>
 
@@ -118,6 +118,6 @@
   <script src="../assets/js/load-components.js?v=12-1"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script type="module" src="../assets/js/clientes.js?v=12-5-2"></script>
+  <script type="module" src="../assets/js/clientes.js?v=12-5-3"></script>
 </body>
 </html>
