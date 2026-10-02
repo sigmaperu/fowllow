@@ -311,8 +311,8 @@ function resetInteraction() {
 }
 
 function scopeMatches(client) {
-  if (activeScope === "MIGRADOS") return client.migrated;
-  if (activeScope === "NO_MIGRADOS") return !client.migrated;
+  if (activeScope === "MIGRADOS") return client.migrated === true;
+  if (activeScope === "NO_MIGRADOS") return client.migrated === false;
   return true;
 }
 
@@ -402,16 +402,22 @@ function updateSearchControl() {
 }
 
 function wireScope() {
-  document.querySelectorAll(".vh-segmented__button").forEach(button => {
-    button.addEventListener("click", () => {
-      activeScope = button.dataset.scope;
-      document.querySelectorAll(".vh-segmented__button").forEach(item => {
-        const active = item === button;
-        item.classList.toggle("is-active", active);
-        item.setAttribute("aria-pressed", String(active));
-      });
-      applyView();
+  // Manejador directo y delegado para garantizar recepción del clic
+  document.addEventListener("click", event => {
+    const button = event.target.closest(".vh-segmented__button");
+    if (!button) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    activeScope = button.dataset.scope;
+    document.querySelectorAll(".vh-segmented__button").forEach(btn => {
+      const active = btn === button;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-pressed", String(active));
     });
+
+    applyView();
   });
 }
 
