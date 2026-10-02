@@ -402,7 +402,6 @@ function updateSearchControl() {
 }
 
 function wireScope() {
-  // Manejador directo y delegado para garantizar recepción del clic
   document.addEventListener("click", event => {
     const button = event.target.closest(".vh-segmented__button");
     if (!button) return;
@@ -429,7 +428,6 @@ function clearAll() {
   byId("statusFilter").value = "";
   byId("filtersPanel").open = false;
 
-  // Restaurar a Planificados
   activeScope = "PLANIFICADOS";
   document.querySelectorAll(".vh-segmented__button").forEach(button => {
     const active = button.dataset.scope === "PLANIFICADOS";
