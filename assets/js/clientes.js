@@ -51,7 +51,43 @@ function exactSearch(){const mode=byId("searchMode").value;let value="";if(mode=
 function applyView(){const channel=clean(byId("channelFilter").value),status=clean(byId("statusFilter").value);currentClients=exactSearch();visibleClients=currentClients.filter(client=>(!channel||clean(client.channel)===channel)&&(!status||clean(client.status)===status));const keys=new Set(visibleClients.map(client=>client.key));if(selectedClientKey&&!keys.has(selectedClientKey))selectedClientKey=null;if(hoveredClientKey&&!keys.has(hoveredClientKey))hoveredClientKey=null;renderedCount=PAGE_SIZE;updateFilterCount();renderTable();renderMap();}
 function updateFilterCount(){const count=Number(Boolean(byId("channelFilter").value))+Number(Boolean(byId("statusFilter").value));byId("filterCount").textContent=String(count);byId("filterCount").hidden=!count;}
 function populateQuickSelect(mode){const selector=byId("quickSearchSelect");const field=mode==="vehicle"?"vehicle":"route";const label=mode==="vehicle"?"Selecciona una placa":"Selecciona una ruta";const values=[...new Set(allClients.map(client=>text(client[field])).filter(value=>value&&value!=="—"))].sort(collator.compare);selector.innerHTML="";selector.add(new Option(label,""));values.forEach(value=>selector.add(new Option(value,value)));selector.value="";}
-function updateSearchControl(){const mode=byId("searchMode").value,input=byId("quickSearch"),selector=byId("quickSearchSelect"),button=byId("searchButton");const usesSelect=mode==="vehicle"||mode==="route";const usesInput=mode==="client";input.hidden=!usesInput;input.disabled=!usesInput;selector.hidden=!usesSelect;selector.disabled=!usesSelect;input.value="";if(usesSelect)populateQuickSelect(mode);else{selector.innerHTML='<option value="">Selecciona una opción</option>';selector.value="";}input.placeholder=usesInput?"Ej. 6244872":"Vista general";button.disabled=mode==="all"||(usesSelect?!selector.value:!input.value.trim());if(mode==="all")applyView();else if(usesInput)input.focus();else selector.focus();}
+function updateSearchControl(){
+  const mode=byId("searchMode").value,
+        input=byId("quickSearch"),
+        selector=byId("quickSearchSelect"),
+        button=byId("searchButton");
+  
+  const usesSelect=mode==="vehicle"||mode==="route";
+  const isAll=mode==="all";
+
+  // Selector solo visible para vehicle y route
+  selector.hidden=!usesSelect;
+  selector.disabled=!usesSelect;
+
+  // El input se mantiene visible tanto para 'client' como para 'all'
+  input.hidden=usesSelect;
+  input.disabled=isAll; // Deshabilitado en 'all' para no permitir ingresar datos
+  input.value="";
+
+  if(usesSelect){
+    populateQuickSelect(mode);
+  }else{
+    selector.innerHTML='<option value="">Selecciona una opción</option>';
+    selector.value="";
+  }
+
+  // Placeholder descriptivo para mantener la estética uniforme
+  input.placeholder=isAll?"Todos los clientes":mode==="client"?"Ej. 6244872":"Vista general";
+  button.disabled=isAll||(usesSelect?!selector.value:!input.value.trim());
+
+  if(isAll){
+    applyView();
+  }else if(mode==="client"){
+    input.focus();
+  }else if(usesSelect){
+    selector.focus();
+  }
+}
 function clearAll(){byId("searchMode").value="all";byId("quickSearch").value="";byId("quickSearchSelect").value="";byId("channelFilter").value="";byId("statusFilter").value="";byId("filtersPanel").open=false;resetInteraction();updateSearchControl();}
 function populateChannelFilter(){const selector=byId("channelFilter");selector.innerHTML='<option value="">Todos los canales</option>';[...new Set(allClients.map(c=>c.channel).filter(v=>v&&v!=="—"))].sort(collator.compare).forEach(value=>selector.add(new Option(value,value)));}
 function csvCell(v){const value=String(v??"");return /[";\n\r]/.test(value)?`"${value.replace(/"/g,'""')}"`:value;}
