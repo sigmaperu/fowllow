@@ -46,7 +46,6 @@ function parseCSVLine(line) {
   return result;
 }
 
-// Función para renderizar los botones de PDF apuntando a la carpeta docs/ en la raíz
 function renderPdfBadges(vehicleKey) {
   if (!vehicleKey) return "—";
   const fumigacionUrl = `../docs/fumigacion/${vehicleKey}.pdf`;
@@ -60,12 +59,10 @@ function renderPdfBadges(vehicleKey) {
   `;
 }
 
-// Función auxiliar para verificar si un archivo PDF existe mediante una petición HEAD/GET ligera
 async function checkFileExists(url) {
   try {
     const response = await fetch(url, { method: 'HEAD' });
     if (response.ok) return true;
-    // Si HEAD falla, intentamos con GET rápido
     const getResp = await fetch(url);
     return getResp.ok;
   } catch (e) {
@@ -102,17 +99,25 @@ async function start() {
 
     const switchTab = (activeBtn, activeSection) => {
       [btnModePedido, btnModeProducto, btnModeChecklist].forEach(b => b.classList.remove("active"));
-      [sectionPedido, sectionProducto, sectionChecklist].forEach(s => s.style.display = "none");
+      [sectionPedido, sectionProducto, sectionChecklist].forEach(s => {
+        if (s) s.style.display = "none";
+      });
       activeBtn.classList.add("active");
-      activeSection.style.display = "block";
+      if (activeSection) activeSection.style.display = "block";
     };
 
-    btnModePedido.addEventListener("click", () => switchTab(btnModePedido, sectionPedido));
-    btnModeProducto.addEventListener("click", () => switchTab(btnModeProducto, sectionProducto));
-    btnModeChecklist.addEventListener("click", () => {
-      switchTab(btnModeChecklist, sectionChecklist);
-      loadChecklistData(rows);
-    });
+    if (btnModePedido && sectionPedido) {
+      btnModePedido.addEventListener("click", () => switchTab(btnModePedido, sectionPedido));
+    }
+    if (btnModeProducto && sectionProducto) {
+      btnModeProducto.addEventListener("click", () => switchTab(btnModeProducto, sectionProducto));
+    }
+    if (btnModeChecklist && sectionChecklist) {
+      btnModeChecklist.addEventListener("click", () => {
+        switchTab(btnModeChecklist, sectionChecklist);
+        loadChecklistData(rows);
+      });
+    }
 
     // --- 1. BÚSQUEDA POR PEDIDO ---
     const buscarPedidoBtn = document.getElementById("buscarPedidoBtn");
@@ -158,8 +163,10 @@ async function start() {
       }
     };
 
-    buscarPedidoBtn.addEventListener("click", executarBusquedaPedido);
-    pedidoInput.addEventListener("keypress", (e) => { if (e.key === "Enter") executarBusquedaPedido(); });
+    if (buscarPedidoBtn) buscarPedidoBtn.addEventListener("click", executarBusquedaPedido);
+    if (pedidoInput) {
+      pedidoInput.addEventListener("keypress", (e) => { if (e.key === "Enter") executarBusquedaPedido(); });
+    }
 
     // --- 2. BÚSQUEDA POR PRODUCTO ---
     const autocompleteList = document.getElementById("productoAutocomplete");
@@ -168,32 +175,34 @@ async function start() {
 
     const uniqueProducts = [...new Set(rows.map(r => r["Item Description"]).filter(Boolean))];
 
-    productoInput.addEventListener("input", () => {
-      const val = productoInput.value.trim().toLowerCase();
-      autocompleteList.innerHTML = "";
-      if (!val) {
-        autocompleteList.style.display = "none";
-        return;
-      }
+    if (productoInput && autocompleteList) {
+      productoInput.addEventListener("input", () => {
+        const val = productoInput.value.trim().toLowerCase();
+        autocompleteList.innerHTML = "";
+        if (!val) {
+          autocompleteList.style.display = "none";
+          return;
+        }
 
-      const filtered = uniqueProducts.filter(p => p.toLowerCase().includes(val)).slice(0, 15);
-      if (filtered.length > 0) {
-        autocompleteList.style.display = "block";
-        filtered.forEach(item => {
-          const div = document.createElement("div");
-          div.className = "autocomplete-item";
-          div.textContent = item;
-          div.addEventListener("click", () => {
-            productoInput.value = item;
-            autocompleteList.style.display = "none";
-            showProductTable(item, rows);
+        const filtered = uniqueProducts.filter(p => p.toLowerCase().includes(val)).slice(0, 15);
+        if (filtered.length > 0) {
+          autocompleteList.style.display = "block";
+          filtered.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "autocomplete-item";
+            div.textContent = item;
+            div.addEventListener("click", () => {
+              productoInput.value = item;
+              autocompleteList.style.display = "none";
+              showProductTable(item, rows);
+            });
+            autocompleteList.appendChild(div);
           });
-          autocompleteList.appendChild(div);
-        });
-      } else {
-        autocompleteList.style.display = "none";
-      }
-    });
+        } else {
+          autocompleteList.style.display = "none";
+        }
+      });
+    }
 
     const executarBusquedaProducto = () => {
       const val = productoInput.value.trim();
@@ -203,16 +212,18 @@ async function start() {
       }
     };
 
-    buscarProductoBtn.addEventListener("click", executarBusquedaProducto);
-    productoInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        autocompleteList.style.display = "none";
-        executarBusquedaProducto();
-      }
-    });
+    if (buscarProductoBtn) buscarProductoBtn.addEventListener("click", executarBusquedaProducto);
+    if (productoInput) {
+      productoInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          autocompleteList.style.display = "none";
+          executarBusquedaProducto();
+        }
+      });
+    }
 
     document.addEventListener("click", (e) => {
-      if (!productoInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+      if (productoInput && autocompleteList && !productoInput.contains(e.target) && !autocompleteList.contains(e.target)) {
         autocompleteList.style.display = "none";
       }
     });
@@ -288,19 +299,15 @@ async function loadChecklistData(rows) {
   const checklistResult = document.getElementById("checklistResult");
   checklistResult.innerHTML = "<p>Filtrando operaciones de octubre y validando archivos en el repositorio...</p>";
 
-  // Filtrar registros cuya fecha pertenezca al mes de octubre (mes '10')
-  // Formato esperado en CSV: dd/mm/yyyy (ej. 30/10/2026)
   const octoberRows = rows.filter(r => {
     const dateStr = r["Delivery Date"] || "";
     const parts = dateStr.split("/");
     if (parts.length === 3) {
-      const month = parts[1];
-      return month === "10";
+      return parts[1] === "10";
     }
     return false;
   });
 
-  // Extraer placas únicas que operaron en octubre
   const uniqueVehicles = [...new Set(octoberRows.map(r => r["Vehicle Key"]).filter(Boolean))].sort();
 
   if (uniqueVehicles.length === 0) {
@@ -308,7 +315,6 @@ async function loadChecklistData(rows) {
     return;
   }
 
-  // Construir la tabla preliminar
   checklistResult.innerHTML = `
     <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Se encontraron <strong>${uniqueVehicles.length}</strong> placas únicas operando en octubre. Validando existencia de PDFs...</p>
     <div class="table-responsive">
@@ -337,7 +343,6 @@ async function loadChecklistData(rows) {
     </div>
   `;
 
-  // Validar de forma asíncrona la existencia real de cada PDF en la carpeta docs/
   for (const veh of uniqueVehicles) {
     const fumUrl = `../docs/fumigacion/${veh}.pdf`;
     const mntUrl = `../docs/mantenimiento/${veh}.pdf`;
@@ -363,3 +368,5 @@ async function loadChecklistData(rows) {
     }
   }
 }
+
+document.addEventListener("DOMContentLoaded", start);
