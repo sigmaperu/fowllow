@@ -4,14 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="icon" type="image/png" href="../assets/img/favicon.png">
-  <meta name="description" content="Trazabilidad y Auditoría Operativa - Fowllow Trace">
-  <title>Trace | Auditoría Operativa Fowllow</title>
+  <meta name="description" content="Trazabilidad y Búsqueda Operativa - Fowllow Trace">
+  <title>Trace | Fowllow</title>
   <link rel="stylesheet" href="../components/theme.css?v=9">
   <link rel="stylesheet" href="../components/main.css?v=9">
   <link rel="stylesheet" href="../components/layout.css?v=9">
   <link rel="stylesheet" href="../components/components.css?v=9">
   <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=9">
   <link rel="stylesheet" href="../assets/css/dashboard.css?v=9">
+  <style>
+    .trace-container { display: grid; gap: 20px; margin-top: 20px; }
+    .trace-card { background: var(--gm-surface, #fff); border: 1px solid #dde4ed; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(15,23,42,.05); }
+    .trace-form-group { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; position: relative; }
+    .trace-input { flex: 1; min-width: 260px; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    .trace-input:focus { border-color: var(--gm-blue, #2563eb); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    .trace-btn { padding: 12px 24px; background: var(--gm-blue, #2563eb); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .trace-btn:hover { opacity: 0.9; }
+    .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 10; box-shadow: 0 8px 20px rgba(15,23,42,0.1); margin-top: 4px; }
+    .autocomplete-item { padding: 10px 14px; cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+    .autocomplete-item:hover { background: #f8fafc; color: var(--gm-blue, #2563eb); }
+    .result-box { margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.95rem; color: #334155; }
+  </style>
 </head>
 <body data-page="trace">
   <div id="sidebar"></div>
@@ -20,58 +33,37 @@
     <main class="gm-content">
       <header class="gm-heading">
         <h1>Fowllow Trace</h1>
-        <p>Módulo de trazabilidad, control de flota y validación normativa para auditoría.</p>
+        <p>Módulo de consulta y trazabilidad operativa (BaseTrazabilidad.csv).</p>
       </header>
 
-      <div id="dashboardError" class="gm-alert" role="alert" hidden></div>
+      <div id="traceError" class="gm-alert" role="alert" hidden style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px;"></div>
 
-      <!-- Tarjetas de Indicadores Clave -->
-      <section class="gm-kpi-grid" aria-label="Indicadores de Trace">
-        <article class="gm-kpi-card gm-kpi-card--migration">
-          <header class="gm-kpi-card__summary">
-            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📍</span>GPS Sinc</h2>
-            <div id="traceGpsGauge" class="gm-gauge"><p id="traceGpsValue" class="gm-gauge__value">—</p></div>
-            <p id="traceGpsDetail" class="gm-kpi-card__detail">Cargando...</p>
-          </header>
-          <div id="traceGpsBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
-        </article>
+      <div class="trace-container">
+        <!-- 1. Búsqueda por Pedido (Shipment Custom) -->
+        <section class="trace-card">
+          <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">🔍 Buscar por Pedido (Shipment Custom)</h2>
+          <p style="font-size: 0.85rem; color: #64748b;">Obtén el vehículo (placa) y la fecha de entrega asociada al pedido.</p>
+          <div class="trace-form-group">
+            <input type="text" id="pedidoInput" class="trace-input" placeholder="Ej. PED-12345 o número de shipment...">
+            <button id="buscarPedidoBtn" class="trace-btn">Consultar Pedido</button>
+          </div>
+          <div id="pedidoResult" class="result-box" style="display: none;"></div>
+        </section>
 
-        <article class="gm-kpi-card gm-kpi-card--connection">
-          <header class="gm-kpi-card__summary">
-            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">🛡️</span>Seguridad</h2>
-            <div id="traceSstGauge" class="gm-gauge"><p id="traceSstValue" class="gm-gauge__value">—</p></div>
-            <p id="traceSstDetail" class="gm-kpi-card__detail">Cargando...</p>
-          </header>
-          <div id="traceSstBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
-        </article>
-
-        <article class="gm-kpi-card gm-kpi-card--progress">
-          <header class="gm-kpi-card__summary">
-            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📦</span>Entregas</h2>
-            <div id="traceDelivGauge" class="gm-gauge"><p id="traceDelivValue" class="gm-gauge__value">—</p></div>
-            <p id="traceDelivDetail" class="gm-kpi-card__detail">Cargando...</p>
-          </header>
-          <div id="traceDelivBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
-        </article>
-
-        <article class="gm-kpi-card gm-kpi-card--client">
-          <header class="gm-kpi-card__summary">
-            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📋</span>RoadMap</h2>
-            <div id="traceRoadGauge" class="gm-gauge"><p id="traceRoadValue" class="gm-gauge__value">—</p></div>
-            <p id="traceRoadDetail" class="gm-kpi-card__detail">Cargando...</p>
-          </header>
-          <div id="traceRoadBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
-        </article>
-
-        <article class="gm-kpi-card gm-kpi-card--kg">
-          <header class="gm-kpi-card__summary">
-            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">⚖️</span>GreenMile</h2>
-            <div id="traceGreenGauge" class="gm-gauge"><p id="traceGreenValue" class="gm-gauge__value">—</p></div>
-            <p id="traceGreenDetail" class="gm-kpi-card__detail">Cargando...</p>
-          </header>
-          <div id="traceGreenBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
-        </article>
-      </section>
+        <!-- 2. Búsqueda por Producto (Item Description) -->
+        <section class="trace-card">
+          <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">📦 Buscar por Producto (Item Description)</h2>
+          <p style="font-size: 0.85rem; color: #64748b;">Escribe para ver sugerencias y consulta un resumen consolidado de fechas, pedidos y placas.</p>
+          <div class="trace-form-group">
+            <div style="position: relative; flex: 1; display: flex;">
+              <input type="text" id="productoInput" class="trace-input" placeholder="Escribe el nombre del producto..." style="width: 100%;">
+              <div id="productoAutocomplete" class="autocomplete-list" style="display: none;"></div>
+            </div>
+            <button id="buscarProductoBtn" class="trace-btn">Ver Resumen</button>
+          </div>
+          <div id="productoResult" class="result-box" style="display: none;"></div>
+        </section>
+      </div>
     </main>
     <div id="footer"></div>
   </div>
