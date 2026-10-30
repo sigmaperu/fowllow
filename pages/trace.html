@@ -24,12 +24,7 @@
     .autocomplete-item { padding: 10px 14px; cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
     .autocomplete-item:hover { background: #f8fafc; color: var(--gm-blue, #2563eb); }
     
-    /* Contenedores de resultados y tablas estilizadas */
     .result-box { margin-top: 16px; display: none; }
-    .gm-result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
-    .gm-info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
-    .gm-info-card label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 4px; }
-    .gm-info-card span { font-size: 1rem; color: #1e293b; font-weight: 600; }
     
     .table-responsive { width: 100%; overflow-x: auto; margin-top: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
     .gm-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; background: #fff; }
@@ -64,7 +59,7 @@
         <!-- 1. Búsqueda por Pedido -->
         <section id="sectionPedido" class="trace-card">
           <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">🔍 Búsqueda por Pedido (Shipment Custom)</h2>
-          <p style="font-size: 0.85rem; color: #64748b;">Obtén el detalle completo del despacho en formato de tarjetas.</p>
+          <p style="font-size: 0.85rem; color: #64748b;">Consulta el detalle del despacho en formato tabular.</p>
           <div class="trace-form-group">
             <input type="text" id="pedidoInput" class="trace-input" placeholder="Ej. 3033203774...">
             <button id="buscarPedidoBtn" class="trace-btn">Consultar Pedido</button>
