@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" type="image/png" href="../assets/img/favicon.png">
+  <meta name="description" content="Trazabilidad y Auditoría Operativa - Fowllow Trace">
+  <title>Trace | Auditoría Operativa Fowllow</title>
+  <link rel="stylesheet" href="../components/theme.css?v=9">
+  <link rel="stylesheet" href="../components/main.css?v=9">
+  <link rel="stylesheet" href="../components/layout.css?v=9">
+  <link rel="stylesheet" href="../components/components.css?v=9">
+  <link rel="stylesheet" href="../assets/css/sidebar-notch.css?v=9">
+  <link rel="stylesheet" href="../assets/css/dashboard.css?v=9">
+</head>
+<body data-page="trace">
+  <div id="sidebar"></div>
+  <div class="gm-shell">
+    <div id="navbar"></div>
+    <main class="gm-content">
+      <header class="gm-heading">
+        <h1>Fowllow Trace</h1>
+        <p>Módulo de trazabilidad, control de flota y validación normativa para auditoría.</p>
+      </header>
+
+      <div id="dashboardError" class="gm-alert" role="alert" hidden></div>
+
+      <!-- Tarjetas de Indicadores Clave -->
+      <section class="gm-kpi-grid" aria-label="Indicadores de Trace">
+        <article class="gm-kpi-card gm-kpi-card--migration">
+          <header class="gm-kpi-card__summary">
+            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📍</span>GPS Sinc</h2>
+            <div id="traceGpsGauge" class="gm-gauge"><p id="traceGpsValue" class="gm-gauge__value">—</p></div>
+            <p id="traceGpsDetail" class="gm-kpi-card__detail">Cargando...</p>
+          </header>
+          <div id="traceGpsBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
+        </article>
+
+        <article class="gm-kpi-card gm-kpi-card--connection">
+          <header class="gm-kpi-card__summary">
+            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">🛡️</span>Seguridad</h2>
+            <div id="traceSstGauge" class="gm-gauge"><p id="traceSstValue" class="gm-gauge__value">—</p></div>
+            <p id="traceSstDetail" class="gm-kpi-card__detail">Cargando...</p>
+          </header>
+          <div id="traceSstBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
+        </article>
+
+        <article class="gm-kpi-card gm-kpi-card--progress">
+          <header class="gm-kpi-card__summary">
+            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📦</span>Entregas</h2>
+            <div id="traceDelivGauge" class="gm-gauge"><p id="traceDelivValue" class="gm-gauge__value">—</p></div>
+            <p id="traceDelivDetail" class="gm-kpi-card__detail">Cargando...</p>
+          </header>
+          <div id="traceDelivBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
+        </article>
+
+        <article class="gm-kpi-card gm-kpi-card--client">
+          <header class="gm-kpi-card__summary">
+            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">📋</span>RoadMap</h2>
+            <div id="traceRoadGauge" class="gm-gauge"><p id="traceRoadValue" class="gm-gauge__value">—</p></div>
+            <p id="traceRoadDetail" class="gm-kpi-card__detail">Cargando...</p>
+          </header>
+          <div id="traceRoadBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
+        </article>
+
+        <article class="gm-kpi-card gm-kpi-card--kg">
+          <header class="gm-kpi-card__summary">
+            <h2 class="gm-kpi-card__title"><span class="gm-kpi-card__icon" aria-hidden="true">⚖️</span>GreenMile</h2>
+            <div id="traceGreenGauge" class="gm-gauge"><p id="traceGreenValue" class="gm-gauge__value">—</p></div>
+            <p id="traceGreenDetail" class="gm-kpi-card__detail">Cargando...</p>
+          </header>
+          <div id="traceGreenBreakdown" class="gm-breakdown"><p class="gm-empty">Cargando…</p></div>
+        </article>
+      </section>
+    </main>
+    <div id="footer"></div>
+  </div>
+
+  <script src="../assets/js/load-components.js?v=9"></script>
+  <script type="module" src="../assets/js/trace.js?v=9"></script>
+</body>
+</html>
