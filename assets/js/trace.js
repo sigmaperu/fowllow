@@ -20,12 +20,14 @@ function parseCSV(text) {
     if (values.length > 0) {
       const row = {};
       headers.forEach((h, index) => {
-        row[h.trim()] = values[index] ? values[index].trim() : "";
+        // Limpiar espacios y comillas ocultas en los nombres de columnas
+        const cleanHeader = h.trim().replace(/^"|"$/g, '');
+        row[cleanHeader] = values[index] ? values[index].trim().replace(/^"|"$/g, '') : "";
       });
       rows.push(row);
     }
   }
-  return rows;
+  return { headers, rows };
 }
 
 function parseCSVLine(line) {
@@ -37,21 +39,55 @@ function parseCSVLine(line) {
     if (char === '"') {
       inQuotes = !inQuotes;
     } else if (char === ',' && !inQuotes) {
-      result.push(line.substring(startValue, i).replace(/^"|"$/g, ''));
+      result.push(line.substring(startValue, i));
       startValue = i + 1;
     }
   }
-  result.push(line.substring(startValue).replace(/^"|"$/g, ''));
+  result.push(line.substring(startValue));
   return result;
 }
 
 async function start() {
   try {
     await componentsReady();
-    const rows = await loadTraceData();
 
-    // --- 1. LÓGICA DE BÚSQUEDA POR PEDIDO (Shipment Custom) ---
+    const productoInput = document.getElementById("productoInput");
     const pedidoInput = document.getElementById("pedidoInput");
+    productoInput.placeholder = "Cargando base de datos...";
+    productoInput.disabled = true;
+    pedidoInput.placeholder = "Cargando base de datos...";
+    pedidoInput.disabled = true;
+
+    const { headers, rows } = await loadTraceData();
+    console.log("Columnas leídas del CSV:", headers);
+
+    // Habilitar campos
+    productoInput.placeholder = "Escribe el nombre del producto...";
+    productoInput.disabled = false;
+    pedidoInput.placeholder = "Ej. 3033203774...";
+    pedidoInput.disabled = false;
+
+    // --- Control de alternancia de pestañas ---
+    const btnModePedido = document.getElementById("btnModePedido");
+    const btnModeProducto = document.getElementById("btnModeProducto");
+    const sectionPedido = document.getElementById("sectionPedido");
+    const sectionProducto = document.getElementById("sectionProducto");
+
+    btnModePedido.addEventListener("click", () => {
+      btnModePedido.classList.add("active");
+      btnModeProducto.classList.remove("active");
+      sectionPedido.style.display = "block";
+      sectionProducto.style.display = "none";
+    });
+
+    btnModeProducto.addEventListener("click", () => {
+      btnModeProducto.classList.add("active");
+      btnModePedido.classList.remove("active");
+      sectionProducto.style.display = "block";
+      sectionPedido.style.display = "none";
+    });
+
+    // --- 1. BÚSQUEDA POR PEDIDO (Shipment Custom) ---
     const buscarPedidoBtn = document.getElementById("buscarPedidoBtn");
     const pedidoResult = document.getElementById("pedidoResult");
 
@@ -76,14 +112,14 @@ async function start() {
     buscarPedidoBtn.addEventListener("click", executarBusquedaPedido);
     pedidoInput.addEventListener("keypress", (e) => { if (e.key === "Enter") executarBusquedaPedido(); });
 
-    // --- 2. LÓGICA DE BÚSQUEDA POR PRODUCTO (Item Description con Autocompletado) ---
-    const productoInput = document.getElementById("productoInput");
+    // --- 2. BÚSQUEDA POR PRODUCTO (Item Description) CON AUTOCOMPLETADO ---
     const autocompleteList = document.getElementById("productoAutocomplete");
     const buscarProductoBtn = document.getElementById("buscarProductoBtn");
     const productoResult = document.getElementById("productoResult");
 
-    // Obtener valores únicos de la columna de producto
+    // Extraer valores únicos de la columna exacta "Item Description"
     const uniqueProducts = [...new Set(rows.map(r => r["Item Description"]).filter(Boolean))];
+    console.log(`Total de productos únicos cargados: ${uniqueProducts.length}`);
 
     productoInput.addEventListener("input", () => {
       const val = productoInput.value.trim().toLowerCase();
@@ -128,7 +164,6 @@ async function start() {
       }
     });
 
-    // Ocultar autocompleado al hacer clic fuera
     document.addEventListener("click", (e) => {
       if (!productoInput.contains(e.target) && !autocompleteList.contains(e.target)) {
         autocompleteList.style.display = "none";
@@ -140,7 +175,7 @@ async function start() {
     const alert = document.getElementById("traceError");
     if (alert) {
       alert.hidden = false;
-      alert.textContent = "Error al cargar o parsear BaseTrazabilidad.csv. Revisa la consola.";
+      alert.textContent = "Error al cargar o parsear BaseTrazabilidad.csv. Revisa la consola del navegador.";
     }
   }
 }
@@ -156,15 +191,14 @@ function showProductSummary(productName, rows) {
     return;
   }
 
-  // Valores únicos sin repetir
+  // Obtener únicamente fechas y placas únicas (sin pedidos, tal como pediste)
   const dates = [...new Set(matchedRows.map(r => r["Delivery Date"]).filter(Boolean))];
-  const shipments = [...new Set(matchedRows.map(r => r["Shipment Custom"]).filter(Boolean))];
   const vehicles = [...new Set(matchedRows.map(r => r["Vehicle Key"]).filter(Boolean))];
 
   productoResult.innerHTML = `
     <h3 style="margin-bottom: 10px; color: var(--gm-navy, #1e3a8a); font-size: 1.05rem;">Resumen Consolidado: ${productName}</h3>
-    <p style="margin-bottom: 8px;"><strong>Total de ocurrencias / filas:</strong> ${matchedRows.length}</p>
-    <div style="display: grid; gap: 8px; margin-top: 10px;">
+    <p style="margin-bottom: 8px;"><strong>Total de registros asociados:</strong> ${matchedRows.length}</p>
+    <div style="display: grid; gap: 10px; margin-top: 10px;">
       <div>
         <strong>Fechas de entrega únicas (${dates.length}):</strong><br>
         <span style="font-size: 0.85rem; color: #475569;">${dates.join(", ")}</span>
@@ -172,10 +206,6 @@ function showProductSummary(productName, rows) {
       <div>
         <strong>Placas / Vehículos únicos (${vehicles.length}):</strong><br>
         <span style="font-size: 0.85rem; color: #475569;">${vehicles.join(", ")}</span>
-      </div>
-      <div>
-        <strong>Pedidos únicos (${shipments.length}):</strong><br>
-        <span style="font-size: 0.85rem; color: #475569;">${shipments.slice(0, 30).join(", ")}${shipments.length > 30 ? ' ... (y más)' : ''}</span>
       </div>
     </div>
   `;
