@@ -84,7 +84,7 @@ async function start() {
       sectionPedido.style.display = "none";
     });
 
-    // --- 1. BÚSQUEDA POR PEDIDO (Formato Cards) ---
+    // --- 1. BÚSQUEDA POR PEDIDO (Formato Tabla unificado) ---
     const buscarPedidoBtn = document.getElementById("buscarPedidoBtn");
     const pedidoResult = document.getElementById("pedidoResult");
 
@@ -97,24 +97,27 @@ async function start() {
 
       if (match) {
         pedidoResult.innerHTML = `
-          <h3 style="margin-bottom: 8px; color: var(--gm-navy, #1e3a8a); font-size: 1.05rem;">Pedido: ${match["Shipment Custom"]}</h3>
-          <div class="gm-result-grid">
-            <div class="gm-info-card">
-              <label>Fecha de Entrega</label>
-              <span>${match["Delivery Date"] || "—"}</span>
-            </div>
-            <div class="gm-info-card">
-              <label>Placa / Vehículo</label>
-              <span>${match["Vehicle Key"] || "—"}</span>
-            </div>
-            <div class="gm-info-card">
-              <label>Cliente (Customer Name)</label>
-              <span>${match["Customer Name"] || "—"}</span>
-            </div>
-            <div class="gm-info-card">
-              <label>Razón Comercial (Customer Name2)</label>
-              <span>${match["Customer Name2"] || "—"}</span>
-            </div>
+          <div class="table-responsive">
+            <table class="gm-table">
+              <thead>
+                <tr>
+                  <th>Pedido</th>
+                  <th>Fecha</th>
+                  <th>Placa</th>
+                  <th>Cliente</th>
+                  <th>Razón Comercial</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>${match["Shipment Custom"] || "—"}</strong></td>
+                  <td>${match["Delivery Date"] || "—"}</td>
+                  <td><strong>${match["Vehicle Key"] || "—"}</strong></td>
+                  <td>${match["Customer Name"] || "—"}</td>
+                  <td>${match["Customer Name2"] || "—"}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         `;
       } else {
@@ -202,7 +205,7 @@ function showProductTable(productName, rows) {
     return;
   }
 
-  // Generar combinaciones únicas (Fecha, Placa, Cliente, Razón Comercial) para evitar filas repetidas idénticas
+  // Combinaciones únicas para evitar filas repetidas
   const uniqueMap = new Map();
   matchedRows.forEach(r => {
     const key = `${r["Delivery Date"]}|${r["Vehicle Key"]}|${r["Customer Name"]}|${r["Customer Name2"]}`;
