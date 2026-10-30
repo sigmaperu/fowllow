@@ -1,5 +1,8 @@
 const componentsReady = () => document.getElementById("pedidoInput") ? Promise.resolve() : new Promise(resolve => document.addEventListener("components:ready", resolve, { once: true }));
 
+let globalRows = [];
+let dataLoaded = false;
+
 async function loadTraceData() {
   const url = "https://raw.githubusercontent.com/sigmaperu/fowllow/refs/heads/main/data/BaseTrazabilidad.csv";
   const response = await fetch(url);
@@ -71,162 +74,62 @@ async function checkFileExists(url) {
 }
 
 async function start() {
-  try {
-    await componentsReady();
+  await componentsReady();
 
-    const productoInput = document.getElementById("productoInput");
-    const pedidoInput = document.getElementById("pedidoInput");
-    productoInput.placeholder = "Cargando base de datos...";
-    productoInput.disabled = true;
-    pedidoInput.placeholder = "Cargando base de datos...";
-    pedidoInput.disabled = true;
+  // --- 1. ACTIVAR PESTAÑAS DE INMEDIATO ---
+  const btnModePedido = document.getElementById("btnModePedido");
+  const btnModeProducto = document.getElementById("btnModeProducto");
+  const btnModeChecklist = document.getElementById("btnModeChecklist");
+  
+  const sectionPedido = document.getElementById("sectionPedido");
+  const sectionProducto = document.getElementById("sectionProducto");
+  const sectionChecklist = document.getElementById("sectionChecklist");
 
-    const { rows } = await loadTraceData();
+  const switchTab = (activeBtn, activeSection) => {
+    [btnModePedido, btnModeProducto, btnModeChecklist].forEach(b => { if(b) b.classList.remove("active"); });
+    [sectionPedido, sectionProducto, sectionChecklist].forEach(s => { if(s) s.style.display = "none"; });
+    if(activeBtn) activeBtn.classList.add("active");
+    if(activeSection) activeSection.style.display = "block";
+  };
 
-    productoInput.placeholder = "Escribe el nombre del producto...";
-    productoInput.disabled = false;
-    pedidoInput.placeholder = "Ej. 3033203774...";
-    pedidoInput.disabled = false;
-
-    // --- Control de Pestañas / Modos ---
-    const btnModePedido = document.getElementById("btnModePedido");
-    const btnModeProducto = document.getElementById("btnModeProducto");
-    const btnModeChecklist = document.getElementById("btnModeChecklist");
-    
-    const sectionPedido = document.getElementById("sectionPedido");
-    const sectionProducto = document.getElementById("sectionProducto");
-    const sectionChecklist = document.getElementById("sectionChecklist");
-
-    const switchTab = (activeBtn, activeSection) => {
-      [btnModePedido, btnModeProducto, btnModeChecklist].forEach(b => b.classList.remove("active"));
-      [sectionPedido, sectionProducto, sectionChecklist].forEach(s => {
-        if (s) s.style.display = "none";
-      });
-      activeBtn.classList.add("active");
-      if (activeSection) activeSection.style.display = "block";
-    };
-
-    if (btnModePedido && sectionPedido) {
-      btnModePedido.addEventListener("click", () => switchTab(btnModePedido, sectionPedido));
-    }
-    if (btnModeProducto && sectionProducto) {
-      btnModeProducto.addEventListener("click", () => switchTab(btnModeProducto, sectionProducto));
-    }
-    if (btnModeChecklist && sectionChecklist) {
-      btnModeChecklist.addEventListener("click", () => {
-        switchTab(btnModeChecklist, sectionChecklist);
-        loadChecklistData(rows);
-      });
-    }
-
-    // --- 1. BÚSQUEDA POR PEDIDO ---
-    const buscarPedidoBtn = document.getElementById("buscarPedidoBtn");
-    const pedidoResult = document.getElementById("pedidoResult");
-
-    const executarBusquedaPedido = () => {
-      const query = pedidoInput.value.trim().toLowerCase();
-      if (!query) return;
-
-      const match = rows.find(r => (r["Shipment Custom"] || "").toLowerCase() === query);
-      pedidoResult.style.display = "block";
-
-      if (match) {
-        const vehicle = match["Vehicle Key"] || "";
-        pedidoResult.innerHTML = `
-          <div class="table-responsive">
-            <table class="gm-table">
-              <thead>
-                <tr>
-                  <th>Pedido</th>
-                  <th>Fecha</th>
-                  <th>Placa</th>
-                  <th>Cliente</th>
-                  <th>Razón Comercial</th>
-                  <th>Documentos (SST)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>${match["Shipment Custom"] || "—"}</strong></td>
-                  <td>${match["Delivery Date"] || "—"}</td>
-                  <td><strong>${vehicle}</strong></td>
-                  <td>${match["Customer Name"] || "—"}</td>
-                  <td>${match["Customer Name2"] || "—"}</td>
-                  <td>${renderPdfBadges(vehicle)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        `;
+  if (btnModePedido && sectionPedido) {
+    btnModePedido.addEventListener("click", () => switchTab(btnModePedido, sectionPedido));
+  }
+  if (btnModeProducto && sectionProducto) {
+    btnModeProducto.addEventListener("click", () => switchTab(btnModeProducto, sectionProducto));
+  }
+  if (btnModeChecklist && sectionChecklist) {
+    btnModeChecklist.addEventListener("click", () => {
+      switchTab(btnModeChecklist, sectionChecklist);
+      if (!dataLoaded) {
+        document.getElementById("checklistResult").innerHTML = "<p>⏳ Cargando base de datos, por favor espere un momento...</p>";
       } else {
-        pedidoResult.innerHTML = `<span style="color: #dc2626;">No se encontró ningún registro para el pedido "${pedidoInput.value}".</span>`;
-      }
-    };
-
-    if (buscarPedidoBtn) buscarPedidoBtn.addEventListener("click", executarBusquedaPedido);
-    if (pedidoInput) {
-      pedidoInput.addEventListener("keypress", (e) => { if (e.key === "Enter") executarBusquedaPedido(); });
-    }
-
-    // --- 2. BÚSQUEDA POR PRODUCTO ---
-    const autocompleteList = document.getElementById("productoAutocomplete");
-    const buscarProductoBtn = document.getElementById("buscarProductoBtn");
-    const productoResult = document.getElementById("productoResult");
-
-    const uniqueProducts = [...new Set(rows.map(r => r["Item Description"]).filter(Boolean))];
-
-    if (productoInput && autocompleteList) {
-      productoInput.addEventListener("input", () => {
-        const val = productoInput.value.trim().toLowerCase();
-        autocompleteList.innerHTML = "";
-        if (!val) {
-          autocompleteList.style.display = "none";
-          return;
-        }
-
-        const filtered = uniqueProducts.filter(p => p.toLowerCase().includes(val)).slice(0, 15);
-        if (filtered.length > 0) {
-          autocompleteList.style.display = "block";
-          filtered.forEach(item => {
-            const div = document.createElement("div");
-            div.className = "autocomplete-item";
-            div.textContent = item;
-            div.addEventListener("click", () => {
-              productoInput.value = item;
-              autocompleteList.style.display = "none";
-              showProductTable(item, rows);
-            });
-            autocompleteList.appendChild(div);
-          });
-        } else {
-          autocompleteList.style.display = "none";
-        }
-      });
-    }
-
-    const executarBusquedaProducto = () => {
-      const val = productoInput.value.trim();
-      autocompleteList.style.display = "none";
-      if (val) {
-        showProductTable(val, rows);
-      }
-    };
-
-    if (buscarProductoBtn) buscarProductoBtn.addEventListener("click", executarBusquedaProducto);
-    if (productoInput) {
-      productoInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-          autocompleteList.style.display = "none";
-          executarBusquedaProducto();
-        }
-      });
-    }
-
-    document.addEventListener("click", (e) => {
-      if (productoInput && autocompleteList && !productoInput.contains(e.target) && !autocompleteList.contains(e.target)) {
-        autocompleteList.style.display = "none";
+        loadChecklistData(globalRows);
       }
     });
+  }
+
+  // Deshabilitar inputs visualmente mientras carga
+  const productoInput = document.getElementById("productoInput");
+  const pedidoInput = document.getElementById("pedidoInput");
+  if (productoInput) { productoInput.placeholder = "Cargando base de datos..."; productoInput.disabled = true; }
+  if (pedidoInput) { pedidoInput.placeholder = "Cargando base de datos..."; pedidoInput.disabled = true; }
+
+  // --- 2. CARGAR DATOS EN SEGUNDO PLANO ---
+  try {
+    const result = await loadTraceData();
+    globalRows = result.rows;
+    dataLoaded = true;
+
+    if (productoInput) { productoInput.placeholder = "Escribe el nombre del producto..."; productoInput.disabled = false; }
+    if (pedidoInput) { pedidoInput.placeholder = "Ej. 3033203774..."; pedidoInput.disabled = false; }
+
+    // Si el usuario ya estaba en el checklist esperando, cargar la tabla automáticamente
+    if (btnModeChecklist && btnModeChecklist.classList.contains("active")) {
+      loadChecklistData(globalRows);
+    }
+
+    initSearchFeatures(globalRows);
 
   } catch (error) {
     console.error(error);
@@ -236,6 +139,119 @@ async function start() {
       alert.textContent = "Error al cargar o parsear BaseTrazabilidad.csv. Revisa la consola del navegador.";
     }
   }
+}
+
+function initSearchFeatures(rows) {
+  // Búsqueda por Pedido
+  const pedidoInput = document.getElementById("pedidoInput");
+  const buscarPedidoBtn = document.getElementById("buscarPedidoBtn");
+  const pedidoResult = document.getElementById("pedidoResult");
+
+  const executarBusquedaPedido = () => {
+    const query = pedidoInput.value.trim().toLowerCase();
+    if (!query) return;
+
+    const match = rows.find(r => (r["Shipment Custom"] || "").toLowerCase() === query);
+    pedidoResult.style.display = "block";
+
+    if (match) {
+      const vehicle = match["Vehicle Key"] || "";
+      pedidoResult.innerHTML = `
+        <div class="table-responsive">
+          <table class="gm-table">
+            <thead>
+              <tr>
+                <th>Pedido</th>
+                <th>Fecha</th>
+                <th>Placa</th>
+                <th>Cliente</th>
+                <th>Razón Comercial</th>
+                <th>Documentos (SST)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>${match["Shipment Custom"] || "—"}</strong></td>
+                <td>${match["Delivery Date"] || "—"}</td>
+                <td><strong>${vehicle}</strong></td>
+                <td>${match["Customer Name"] || "—"}</td>
+                <td>${match["Customer Name2"] || "—"}</td>
+                <td>${renderPdfBadges(vehicle)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else {
+      pedidoResult.innerHTML = `<span style="color: #dc2626;">No se encontró ningún registro para el pedido "${pedidoInput.value}".</span>`;
+    }
+  };
+
+  if (buscarPedidoBtn) buscarPedidoBtn.addEventListener("click", executarBusquedaPedido);
+  if (pedidoInput) {
+    pedidoInput.addEventListener("keypress", (e) => { if (e.key === "Enter") executarBusquedaPedido(); });
+  }
+
+  // Búsqueda por Producto
+  const productoInput = document.getElementById("productoInput");
+  const autocompleteList = document.getElementById("productoAutocomplete");
+  const buscarProductoBtn = document.getElementById("buscarProductoBtn");
+  const productoResult = document.getElementById("productoResult");
+
+  const uniqueProducts = [...new Set(rows.map(r => r["Item Description"]).filter(Boolean))];
+
+  if (productoInput && autocompleteList) {
+    productoInput.addEventListener("input", () => {
+      const val = productoInput.value.trim().toLowerCase();
+      autocompleteList.innerHTML = "";
+      if (!val) {
+        autocompleteList.style.display = "none";
+        return;
+      }
+
+      const filtered = uniqueProducts.filter(p => p.toLowerCase().includes(val)).slice(0, 15);
+      if (filtered.length > 0) {
+        autocompleteList.style.display = "block";
+        filtered.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "autocomplete-item";
+          div.textContent = item;
+          div.addEventListener("click", () => {
+            productoInput.value = item;
+            autocompleteList.style.display = "none";
+            showProductTable(item, rows);
+          });
+          autocompleteList.appendChild(div);
+        });
+      } else {
+        autocompleteList.style.display = "none";
+      }
+    });
+  }
+
+  const executarBusquedaProducto = () => {
+    const val = productoInput.value.trim();
+    autocompleteList.style.display = "none";
+    if (val) {
+      showProductTable(val, rows);
+    }
+  };
+
+  if (buscarProductoBtn) buscarProductoBtn.addEventListener("click", executarBusquedaProducto);
+  if (productoInput) {
+    productoInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        autocompleteList.style.display = "none";
+        executarBusquedaProducto();
+      }
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (productoInput && autocompleteList && !productoInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+      autocompleteList.style.display = "none";
+    }
+  });
 }
 
 function showProductTable(productName, rows) {
@@ -294,7 +310,6 @@ function showProductTable(productName, rows) {
   `;
 }
 
-// --- 3. LÓGICA CHECKLIST OCTUBRE ---
 async function loadChecklistData(rows) {
   const checklistResult = document.getElementById("checklistResult");
   checklistResult.innerHTML = "<p>Filtrando operaciones de octubre y validando archivos en el repositorio...</p>";
