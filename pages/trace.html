@@ -24,6 +24,11 @@
     .autocomplete-item { padding: 10px 14px; cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
     .autocomplete-item:hover { background: #f8fafc; color: var(--gm-blue, #2563eb); }
     .result-box { margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.95rem; color: #334155; }
+    
+    /* Selector de pestañas / modos */
+    .trace-mode-selector { display: flex; gap: 12px; margin-bottom: 16px; }
+    .trace-mode-btn { padding: 10px 20px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .trace-mode-btn.active { background: var(--gm-blue, #2563eb); color: #fff; border-color: var(--gm-blue, #2563eb); }
   </style>
 </head>
 <body data-page="trace">
@@ -39,9 +44,15 @@
       <div id="traceError" class="gm-alert" role="alert" hidden style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px;"></div>
 
       <div class="trace-container">
+        <!-- Selector de Alternativa -->
+        <div class="trace-mode-selector">
+          <button id="btnModePedido" class="trace-mode-btn active">🔍 Buscar por Pedido</button>
+          <button id="btnModeProducto" class="trace-mode-btn">📦 Buscar por Producto</button>
+        </div>
+
         <!-- 1. Búsqueda por Pedido (Shipment Custom) -->
-        <section class="trace-card">
-          <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">🔍 Buscar por Pedido (Shipment Custom)</h2>
+        <section id="sectionPedido" class="trace-card">
+          <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">🔍 Búsqueda por Pedido (Shipment Custom)</h2>
           <p style="font-size: 0.85rem; color: #64748b;">Obtén el vehículo (placa) y la fecha de entrega asociada al pedido.</p>
           <div class="trace-form-group">
             <input type="text" id="pedidoInput" class="trace-input" placeholder="Ej. PED-12345 o número de shipment...">
@@ -51,9 +62,9 @@
         </section>
 
         <!-- 2. Búsqueda por Producto (Item Description) -->
-        <section class="trace-card">
-          <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">📦 Buscar por Producto (Item Description)</h2>
-          <p style="font-size: 0.85rem; color: #64748b;">Escribe para ver sugerencias y consulta un resumen consolidado de fechas, pedidos y placas.</p>
+        <section id="sectionProducto" class="trace-card" style="display: none;">
+          <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">📦 Búsqueda por Producto (Item Description)</h2>
+          <p style="font-size: 0.85rem; color: #64748b;">Escribe para ver sugerencias y consulta el resumen consolidado de fechas y placas.</p>
           <div class="trace-form-group">
             <div style="position: relative; flex: 1; display: flex;">
               <input type="text" id="productoInput" class="trace-input" placeholder="Escribe el nombre del producto..." style="width: 100%;">
