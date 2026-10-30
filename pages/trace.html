@@ -23,9 +23,20 @@
     .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 10; box-shadow: 0 8px 20px rgba(15,23,42,0.1); margin-top: 4px; }
     .autocomplete-item { padding: 10px 14px; cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
     .autocomplete-item:hover { background: #f8fafc; color: var(--gm-blue, #2563eb); }
-    .result-box { margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.95rem; color: #334155; }
     
-    /* Selector de pestañas / modos */
+    /* Contenedores de resultados y tablas estilizadas */
+    .result-box { margin-top: 16px; display: none; }
+    .gm-result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
+    .gm-info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+    .gm-info-card label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 4px; }
+    .gm-info-card span { font-size: 1rem; color: #1e293b; font-weight: 600; }
+    
+    .table-responsive { width: 100%; overflow-x: auto; margin-top: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .gm-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; background: #fff; }
+    .gm-table th { background: #f1f5f9; color: #334155; padding: 10px 12px; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
+    .gm-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #475569; }
+    .gm-table tr:last-child td { border-bottom: none; }
+    
     .trace-mode-selector { display: flex; gap: 12px; margin-bottom: 16px; }
     .trace-mode-btn { padding: 10px 20px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
     .trace-mode-btn.active { background: var(--gm-blue, #2563eb); color: #fff; border-color: var(--gm-blue, #2563eb); }
@@ -50,21 +61,21 @@
           <button id="btnModeProducto" class="trace-mode-btn">📦 Buscar por Producto</button>
         </div>
 
-        <!-- 1. Búsqueda por Pedido (Shipment Custom) -->
+        <!-- 1. Búsqueda por Pedido -->
         <section id="sectionPedido" class="trace-card">
           <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">🔍 Búsqueda por Pedido (Shipment Custom)</h2>
-          <p style="font-size: 0.85rem; color: #64748b;">Obtén el vehículo (placa) y la fecha de entrega asociada al pedido.</p>
+          <p style="font-size: 0.85rem; color: #64748b;">Obtén el detalle completo del despacho en formato de tarjetas.</p>
           <div class="trace-form-group">
-            <input type="text" id="pedidoInput" class="trace-input" placeholder="Ej. PED-12345 o número de shipment...">
+            <input type="text" id="pedidoInput" class="trace-input" placeholder="Ej. 3033203774...">
             <button id="buscarPedidoBtn" class="trace-btn">Consultar Pedido</button>
           </div>
-          <div id="pedidoResult" class="result-box" style="display: none;"></div>
+          <div id="pedidoResult" class="result-box"></div>
         </section>
 
-        <!-- 2. Búsqueda por Producto (Item Description) -->
+        <!-- 2. Búsqueda por Producto -->
         <section id="sectionProducto" class="trace-card" style="display: none;">
           <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">📦 Búsqueda por Producto (Item Description)</h2>
-          <p style="font-size: 0.85rem; color: #64748b;">Escribe para ver sugerencias y consulta el resumen consolidado de fechas y placas.</p>
+          <p style="font-size: 0.85rem; color: #64748b;">Escribe el producto y consulta el resumen consolidado en tabla.</p>
           <div class="trace-form-group">
             <div style="position: relative; flex: 1; display: flex;">
               <input type="text" id="productoInput" class="trace-input" placeholder="Escribe el nombre del producto..." style="width: 100%;">
@@ -72,7 +83,7 @@
             </div>
             <button id="buscarProductoBtn" class="trace-btn">Ver Resumen</button>
           </div>
-          <div id="productoResult" class="result-box" style="display: none;"></div>
+          <div id="productoResult" class="result-box"></div>
         </section>
       </div>
     </main>
