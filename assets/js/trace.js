@@ -46,6 +46,33 @@ function parseCSVLine(line) {
   return result;
 }
 
+// Función para renderizar los botones de PDF apuntando a la carpeta docs/ en la raíz
+function renderPdfBadges(vehicleKey) {
+  if (!vehicleKey) return "—";
+  const fumigacionUrl = `../docs/fumigacion/${vehicleKey}.pdf`;
+  const mantenimientoUrl = `../docs/mantenimiento/${vehicleKey}.pdf`;
+
+  return `
+    <div class="doc-icons">
+      <a href="${fumigacionUrl}" target="_blank" class="pdf-badge pdf-badge--fumigacion" title="Ver fumigación"><span>🦠</span> Fumigación</a>
+      <a href="${mantenimientoUrl}" target="_blank" class="pdf-badge pdf-badge--mantenimiento" title="Ver mantenimiento"><span>🔧</span> Mantenimiento</a>
+    </div>
+  `;
+}
+
+// Función auxiliar para verificar si un archivo PDF existe mediante una petición HEAD/GET ligera
+async function checkFileExists(url) {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    if (response.ok) return true;
+    // Si HEAD falla, intentamos con GET rápido
+    const getResp = await fetch(url);
+    return getResp.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function start() {
   try {
     await componentsReady();
@@ -64,27 +91,30 @@ async function start() {
     pedidoInput.placeholder = "Ej. 3033203774...";
     pedidoInput.disabled = false;
 
-    // --- Pestañas / Modos ---
+    // --- Control de Pestañas / Modos ---
     const btnModePedido = document.getElementById("btnModePedido");
     const btnModeProducto = document.getElementById("btnModeProducto");
+    const btnModeChecklist = document.getElementById("btnModeChecklist");
+    
     const sectionPedido = document.getElementById("sectionPedido");
     const sectionProducto = document.getElementById("sectionProducto");
+    const sectionChecklist = document.getElementById("sectionChecklist");
 
-    btnModePedido.addEventListener("click", () => {
-      btnModePedido.classList.add("active");
-      btnModeProducto.classList.remove("active");
-      sectionPedido.style.display = "block";
-      sectionProducto.style.display = "none";
+    const switchTab = (activeBtn, activeSection) => {
+      [btnModePedido, btnModeProducto, btnModeChecklist].forEach(b => b.classList.remove("active"));
+      [sectionPedido, sectionProducto, sectionChecklist].forEach(s => s.style.display = "none");
+      activeBtn.classList.add("active");
+      activeSection.style.display = "block";
+    };
+
+    btnModePedido.addEventListener("click", () => switchTab(btnModePedido, sectionPedido));
+    btnModeProducto.addEventListener("click", () => switchTab(btnModeProducto, sectionProducto));
+    btnModeChecklist.addEventListener("click", () => {
+      switchTab(btnModeChecklist, sectionChecklist);
+      loadChecklistData(rows);
     });
 
-    btnModeProducto.addEventListener("click", () => {
-      btnModeProducto.classList.add("active");
-      btnModePedido.classList.remove("active");
-      sectionProducto.style.display = "block";
-      sectionPedido.style.display = "none";
-    });
-
-    // --- 1. BÚSQUEDA POR PEDIDO (Formato Tabla unificado) ---
+    // --- 1. BÚSQUEDA POR PEDIDO ---
     const buscarPedidoBtn = document.getElementById("buscarPedidoBtn");
     const pedidoResult = document.getElementById("pedidoResult");
 
@@ -96,6 +126,7 @@ async function start() {
       pedidoResult.style.display = "block";
 
       if (match) {
+        const vehicle = match["Vehicle Key"] || "";
         pedidoResult.innerHTML = `
           <div class="table-responsive">
             <table class="gm-table">
@@ -106,15 +137,17 @@ async function start() {
                   <th>Placa</th>
                   <th>Cliente</th>
                   <th>Razón Comercial</th>
+                  <th>Documentos (SST)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td><strong>${match["Shipment Custom"] || "—"}</strong></td>
                   <td>${match["Delivery Date"] || "—"}</td>
-                  <td><strong>${match["Vehicle Key"] || "—"}</strong></td>
+                  <td><strong>${vehicle}</strong></td>
                   <td>${match["Customer Name"] || "—"}</td>
                   <td>${match["Customer Name2"] || "—"}</td>
+                  <td>${renderPdfBadges(vehicle)}</td>
                 </tr>
               </tbody>
             </table>
@@ -128,7 +161,7 @@ async function start() {
     buscarPedidoBtn.addEventListener("click", executarBusquedaPedido);
     pedidoInput.addEventListener("keypress", (e) => { if (e.key === "Enter") executarBusquedaPedido(); });
 
-    // --- 2. BÚSQUEDA POR PRODUCTO (Formato Tabla Consolidada) ---
+    // --- 2. BÚSQUEDA POR PRODUCTO ---
     const autocompleteList = document.getElementById("productoAutocomplete");
     const buscarProductoBtn = document.getElementById("buscarProductoBtn");
     const productoResult = document.getElementById("productoResult");
@@ -205,7 +238,6 @@ function showProductTable(productName, rows) {
     return;
   }
 
-  // Combinaciones únicas para evitar filas repetidas
   const uniqueMap = new Map();
   matchedRows.forEach(r => {
     const key = `${r["Delivery Date"]}|${r["Vehicle Key"]}|${r["Customer Name"]}|${r["Customer Name2"]}`;
@@ -223,7 +255,7 @@ function showProductTable(productName, rows) {
 
   productoResult.innerHTML = `
     <h3 style="margin-bottom: 6px; color: var(--gm-navy, #1e3a8a); font-size: 1.05rem;">Resumen Consolidado: ${productName}</h3>
-    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Mostrando ${uniqueList.length} registros únicos consolidados (Fecha, Placa, Cliente y Razón Comercial).</p>
+    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Mostrando ${uniqueList.length} registros únicos con acceso a documentos.</p>
     <div class="table-responsive">
       <table class="gm-table">
         <thead>
@@ -232,6 +264,7 @@ function showProductTable(productName, rows) {
             <th>Placa</th>
             <th>Cliente</th>
             <th>Razón Comercial</th>
+            <th>Documentos (SST)</th>
           </tr>
         </thead>
         <tbody>
@@ -241,6 +274,7 @@ function showProductTable(productName, rows) {
               <td><strong>${item.vehicle || "—"}</strong></td>
               <td>${item.customer || "—"}</td>
               <td>${item.commercial || "—"}</td>
+              <td>${renderPdfBadges(item.vehicle)}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -249,4 +283,83 @@ function showProductTable(productName, rows) {
   `;
 }
 
-document.addEventListener("DOMContentLoaded", start);
+// --- 3. LÓGICA CHECKLIST OCTUBRE ---
+async function loadChecklistData(rows) {
+  const checklistResult = document.getElementById("checklistResult");
+  checklistResult.innerHTML = "<p>Filtrando operaciones de octubre y validando archivos en el repositorio...</p>";
+
+  // Filtrar registros cuya fecha pertenezca al mes de octubre (mes '10')
+  // Formato esperado en CSV: dd/mm/yyyy (ej. 30/10/2026)
+  const octoberRows = rows.filter(r => {
+    const dateStr = r["Delivery Date"] || "";
+    const parts = dateStr.split("/");
+    if (parts.length === 3) {
+      const month = parts[1];
+      return month === "10";
+    }
+    return false;
+  });
+
+  // Extraer placas únicas que operaron en octubre
+  const uniqueVehicles = [...new Set(octoberRows.map(r => r["Vehicle Key"]).filter(Boolean))].sort();
+
+  if (uniqueVehicles.length === 0) {
+    checklistResult.innerHTML = `<span style="color: #dc2626;">No se encontraron registros de vehículos para el mes de octubre.</span>`;
+    return;
+  }
+
+  // Construir la tabla preliminar
+  checklistResult.innerHTML = `
+    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Se encontraron <strong>${uniqueVehicles.length}</strong> placas únicas operando en octubre. Validando existencia de PDFs...</p>
+    <div class="table-responsive">
+      <table class="gm-table" id="checklistTable">
+        <thead>
+          <tr>
+            <th>N°</th>
+            <th>Placa / Vehículo</th>
+            <th>Fumigación (PDF)</th>
+            <th>Mantenimiento (PDF)</th>
+            <th>Acción / Ver Archivos</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${uniqueVehicles.map((veh, index) => `
+            <tr id="check-row-${veh}">
+              <td>${index + 1}</td>
+              <td><strong>${veh}</strong></td>
+              <td id="fum-${veh}">⌛ Verificando...</td>
+              <td id="mnt-${veh}">⌛ Verificando...</td>
+              <td>${renderPdfBadges(veh)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  // Validar de forma asíncrona la existencia real de cada PDF en la carpeta docs/
+  for (const veh of uniqueVehicles) {
+    const fumUrl = `../docs/fumigacion/${veh}.pdf`;
+    const mntUrl = `../docs/mantenimiento/${veh}.pdf`;
+
+    const [fumExists, mntExists] = await Promise.all([
+      checkFileExists(fumUrl),
+      checkFileExists(mntUrl)
+    ]);
+
+    const fumCell = document.getElementById(`fum-${veh}`);
+    const mntCell = document.getElementById(`mnt-${veh}`);
+
+    if (fumCell) {
+      fumCell.innerHTML = fumExists 
+        ? `<span class="status-badge" style="color: #10b981;" title="Documento encontrado">✅ Sí</span>` 
+        : `<span class="status-badge" style="color: #ef4444;" title="Falta archivo PDF">❌ No</span>`;
+    }
+
+    if (mntCell) {
+      mntCell.innerHTML = mntExists 
+        ? `<span class="status-badge" style="color: #10b981;" title="Documento encontrado">✅ Sí</span>` 
+        : `<span class="status-badge" style="color: #ef4444;" title="Falta archivo PDF">❌ No</span>`;
+    }
+  }
+}
