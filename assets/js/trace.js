@@ -20,7 +20,6 @@ function parseCSV(text) {
     if (values.length > 0) {
       const row = {};
       headers.forEach((h, index) => {
-        // Limpiar espacios y comillas ocultas en los nombres de columnas
         const cleanHeader = h.trim().replace(/^"|"$/g, '');
         row[cleanHeader] = values[index] ? values[index].trim().replace(/^"|"$/g, '') : "";
       });
@@ -58,16 +57,14 @@ async function start() {
     pedidoInput.placeholder = "Cargando base de datos...";
     pedidoInput.disabled = true;
 
-    const { headers, rows } = await loadTraceData();
-    console.log("Columnas leídas del CSV:", headers);
+    const { rows } = await loadTraceData();
 
-    // Habilitar campos
     productoInput.placeholder = "Escribe el nombre del producto...";
     productoInput.disabled = false;
     pedidoInput.placeholder = "Ej. 3033203774...";
     pedidoInput.disabled = false;
 
-    // --- Control de alternancia de pestañas ---
+    // --- Pestañas / Modos ---
     const btnModePedido = document.getElementById("btnModePedido");
     const btnModeProducto = document.getElementById("btnModeProducto");
     const sectionPedido = document.getElementById("sectionPedido");
@@ -87,7 +84,7 @@ async function start() {
       sectionPedido.style.display = "none";
     });
 
-    // --- 1. BÚSQUEDA POR PEDIDO (Shipment Custom) ---
+    // --- 1. BÚSQUEDA POR PEDIDO (Formato Cards) ---
     const buscarPedidoBtn = document.getElementById("buscarPedidoBtn");
     const pedidoResult = document.getElementById("pedidoResult");
 
@@ -100,9 +97,25 @@ async function start() {
 
       if (match) {
         pedidoResult.innerHTML = `
-          <strong style="color: var(--gm-blue, #2563eb);">Pedido Encontrado:</strong> ${match["Shipment Custom"]}<br>
-          <strong style="color: #1e293b;">Vehículo / Placa:</strong> ${match["Vehicle Key"] || "No especificado"}<br>
-          <strong style="color: #1e293b;">Fecha de Entrega:</strong> ${match["Delivery Date"] || "No especificada"}
+          <h3 style="margin-bottom: 8px; color: var(--gm-navy, #1e3a8a); font-size: 1.05rem;">Pedido: ${match["Shipment Custom"]}</h3>
+          <div class="gm-result-grid">
+            <div class="gm-info-card">
+              <label>Fecha de Entrega</label>
+              <span>${match["Delivery Date"] || "—"}</span>
+            </div>
+            <div class="gm-info-card">
+              <label>Placa / Vehículo</label>
+              <span>${match["Vehicle Key"] || "—"}</span>
+            </div>
+            <div class="gm-info-card">
+              <label>Cliente (Customer Name)</label>
+              <span>${match["Customer Name"] || "—"}</span>
+            </div>
+            <div class="gm-info-card">
+              <label>Razón Comercial (Customer Name2)</label>
+              <span>${match["Customer Name2"] || "—"}</span>
+            </div>
+          </div>
         `;
       } else {
         pedidoResult.innerHTML = `<span style="color: #dc2626;">No se encontró ningún registro para el pedido "${pedidoInput.value}".</span>`;
@@ -112,14 +125,12 @@ async function start() {
     buscarPedidoBtn.addEventListener("click", executarBusquedaPedido);
     pedidoInput.addEventListener("keypress", (e) => { if (e.key === "Enter") executarBusquedaPedido(); });
 
-    // --- 2. BÚSQUEDA POR PRODUCTO (Item Description) CON AUTOCOMPLETADO ---
+    // --- 2. BÚSQUEDA POR PRODUCTO (Formato Tabla Consolidada) ---
     const autocompleteList = document.getElementById("productoAutocomplete");
     const buscarProductoBtn = document.getElementById("buscarProductoBtn");
     const productoResult = document.getElementById("productoResult");
 
-    // Extraer valores únicos de la columna exacta "Item Description"
     const uniqueProducts = [...new Set(rows.map(r => r["Item Description"]).filter(Boolean))];
-    console.log(`Total de productos únicos cargados: ${uniqueProducts.length}`);
 
     productoInput.addEventListener("input", () => {
       const val = productoInput.value.trim().toLowerCase();
@@ -139,7 +150,7 @@ async function start() {
           div.addEventListener("click", () => {
             productoInput.value = item;
             autocompleteList.style.display = "none";
-            showProductSummary(item, rows);
+            showProductTable(item, rows);
           });
           autocompleteList.appendChild(div);
         });
@@ -152,7 +163,7 @@ async function start() {
       const val = productoInput.value.trim();
       autocompleteList.style.display = "none";
       if (val) {
-        showProductSummary(val, rows);
+        showProductTable(val, rows);
       }
     };
 
@@ -180,7 +191,7 @@ async function start() {
   }
 }
 
-function showProductSummary(productName, rows) {
+function showProductTable(productName, rows) {
   const productoResult = document.getElementById("productoResult");
   const matchedRows = rows.filter(r => (r["Item Description"] || "").toLowerCase() === productName.toLowerCase());
 
@@ -191,22 +202,46 @@ function showProductSummary(productName, rows) {
     return;
   }
 
-  // Obtener únicamente fechas y placas únicas (sin pedidos, tal como pediste)
-  const dates = [...new Set(matchedRows.map(r => r["Delivery Date"]).filter(Boolean))];
-  const vehicles = [...new Set(matchedRows.map(r => r["Vehicle Key"]).filter(Boolean))];
+  // Generar combinaciones únicas (Fecha, Placa, Cliente, Razón Comercial) para evitar filas repetidas idénticas
+  const uniqueMap = new Map();
+  matchedRows.forEach(r => {
+    const key = `${r["Delivery Date"]}|${r["Vehicle Key"]}|${r["Customer Name"]}|${r["Customer Name2"]}`;
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, {
+        date: r["Delivery Date"],
+        vehicle: r["Vehicle Key"],
+        customer: r["Customer Name"],
+        commercial: r["Customer Name2"]
+      });
+    }
+  });
+
+  const uniqueList = Array.from(uniqueMap.values());
 
   productoResult.innerHTML = `
-    <h3 style="margin-bottom: 10px; color: var(--gm-navy, #1e3a8a); font-size: 1.05rem;">Resumen Consolidado: ${productName}</h3>
-    <p style="margin-bottom: 8px;"><strong>Total de registros asociados:</strong> ${matchedRows.length}</p>
-    <div style="display: grid; gap: 10px; margin-top: 10px;">
-      <div>
-        <strong>Fechas de entrega únicas (${dates.length}):</strong><br>
-        <span style="font-size: 0.85rem; color: #475569;">${dates.join(", ")}</span>
-      </div>
-      <div>
-        <strong>Placas / Vehículos únicos (${vehicles.length}):</strong><br>
-        <span style="font-size: 0.85rem; color: #475569;">${vehicles.join(", ")}</span>
-      </div>
+    <h3 style="margin-bottom: 6px; color: var(--gm-navy, #1e3a8a); font-size: 1.05rem;">Resumen Consolidado: ${productName}</h3>
+    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Mostrando ${uniqueList.length} registros únicos consolidados (Fecha, Placa, Cliente y Razón Comercial).</p>
+    <div class="table-responsive">
+      <table class="gm-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Placa</th>
+            <th>Cliente</th>
+            <th>Razón Comercial</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${uniqueList.map(item => `
+            <tr>
+              <td>${item.date || "—"}</td>
+              <td><strong>${item.vehicle || "—"}</strong></td>
+              <td>${item.customer || "—"}</td>
+              <td>${item.commercial || "—"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
     </div>
   `;
 }
