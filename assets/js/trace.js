@@ -49,6 +49,43 @@ function parseCSVLine(line) {
   return result;
 }
 
+// Función global para abrir el Pop-up / Modal de previsualización
+window.openPdfModal = function(url, title) {
+  const modal = document.getElementById("pdfModal");
+  const iframe = document.getElementById("pdfViewerFrame");
+  const modalTitle = document.getElementById("pdfModalTitle");
+  const downloadBtn = document.getElementById("pdfDownloadBtn");
+
+  if (modal && iframe && modalTitle) {
+    iframe.src = url;
+    modalTitle.textContent = title;
+    downloadBtn.href = url;
+    modal.style.display = "grid";
+  }
+};
+
+function setupPdfModalEvents() {
+  const modal = document.getElementById("pdfModal");
+  const closeBtn = document.getElementById("closePdfModal");
+  const closeBtnFooter = document.getElementById("closePdfModalBtn");
+
+  const closeModal = () => {
+    if (modal) {
+      modal.style.display = "none";
+      document.getElementById("pdfViewerFrame").src = "";
+    }
+  };
+
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+  if (closeBtnFooter) closeBtnFooter.addEventListener("click", closeModal);
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+}
+
+// Generar botones que abren el modal en lugar de descargar directo
 function renderPdfBadges(vehicleKey) {
   if (!vehicleKey) return "—";
   const fumigacionUrl = `../docs/fumigacion/${vehicleKey}.pdf`;
@@ -56,8 +93,8 @@ function renderPdfBadges(vehicleKey) {
 
   return `
     <div class="doc-icons">
-      <a href="${fumigacionUrl}" target="_blank" class="pdf-badge pdf-badge--fumigacion" title="Ver fumigación"><span>🦠</span> Fumigación</a>
-      <a href="${mantenimientoUrl}" target="_blank" class="pdf-badge pdf-badge--mantenimiento" title="Ver mantenimiento"><span>🔧</span> Mantenimiento</a>
+      <button type="button" onclick="openPdfModal('${fumigacionUrl}', 'Certificado de Fumigación - Placa: ${vehicleKey}')" class="pdf-badge pdf-badge--fumigacion" title="Previsualizar fumigación"><span>🦠</span> Fumigación</button>
+      <button type="button" onclick="openPdfModal('${mantenimientoUrl}', 'Orden de Mantenimiento - Placa: ${vehicleKey}')" class="pdf-badge pdf-badge--mantenimiento" title="Previsualizar mantenimiento"><span>🔧</span> Mantenimiento</button>
     </div>
   `;
 }
@@ -75,8 +112,8 @@ async function checkFileExists(url) {
 
 async function start() {
   await componentsReady();
+  setupPdfModalEvents();
 
-  // --- 1. ACTIVAR PESTAÑAS DE INMEDIATO ---
   const btnModePedido = document.getElementById("btnModePedido");
   const btnModeProducto = document.getElementById("btnModeProducto");
   const btnModeChecklist = document.getElementById("btnModeChecklist");
@@ -109,13 +146,11 @@ async function start() {
     });
   }
 
-  // Deshabilitar inputs visualmente mientras carga
   const productoInput = document.getElementById("productoInput");
   const pedidoInput = document.getElementById("pedidoInput");
   if (productoInput) { productoInput.placeholder = "Cargando base de datos..."; productoInput.disabled = true; }
   if (pedidoInput) { pedidoInput.placeholder = "Cargando base de datos..."; pedidoInput.disabled = true; }
 
-  // --- 2. CARGAR DATOS EN SEGUNDO PLANO ---
   try {
     const result = await loadTraceData();
     globalRows = result.rows;
@@ -124,7 +159,6 @@ async function start() {
     if (productoInput) { productoInput.placeholder = "Escribe el nombre del producto..."; productoInput.disabled = false; }
     if (pedidoInput) { pedidoInput.placeholder = "Ej. 3033203774..."; pedidoInput.disabled = false; }
 
-    // Si el usuario ya estaba en el checklist esperando, cargar la tabla automáticamente
     if (btnModeChecklist && btnModeChecklist.classList.contains("active")) {
       loadChecklistData(globalRows);
     }
@@ -142,7 +176,6 @@ async function start() {
 }
 
 function initSearchFeatures(rows) {
-  // Búsqueda por Pedido
   const pedidoInput = document.getElementById("pedidoInput");
   const buscarPedidoBtn = document.getElementById("buscarPedidoBtn");
   const pedidoResult = document.getElementById("pedidoResult");
@@ -192,7 +225,6 @@ function initSearchFeatures(rows) {
     pedidoInput.addEventListener("keypress", (e) => { if (e.key === "Enter") executarBusquedaPedido(); });
   }
 
-  // Búsqueda por Producto
   const productoInput = document.getElementById("productoInput");
   const autocompleteList = document.getElementById("productoAutocomplete");
   const buscarProductoBtn = document.getElementById("buscarProductoBtn");
@@ -310,12 +342,22 @@ function showProductTable(productName, rows) {
   `;
 }
 
+// --- 3. CHECKLIST OCTUBRE (Filtro estrictamente octubre y exclusión de placas) ---
 async function loadChecklistData(rows) {
   const checklistResult = document.getElementById("checklistResult");
-  checklistResult.innerHTML = "<p>Filtrando operaciones de octubre y validando archivos en el repositorio...</p>";
+  checklistResult.innerHTML = "<p>Filtrando operaciones de octubre (excluyendo RES-CLI y FRT-001) y validando archivos...</p>";
+
+  // Placas excluidas por requerimiento
+  const excludedVehicles = ["RES-CLI", "FRT-001"];
 
   const octoberRows = rows.filter(r => {
     const dateStr = r["Delivery Date"] || "";
+    const vehicleKey = (r["Vehicle Key"] || "").trim();
+
+    // Validar exclusión de placas
+    if (excludedVehicles.includes(vehicleKey)) return false;
+
+    // Validar estricto mes de octubre (part[1] === "10")
     const parts = dateStr.split("/");
     if (parts.length === 3) {
       return parts[1] === "10";
@@ -326,12 +368,12 @@ async function loadChecklistData(rows) {
   const uniqueVehicles = [...new Set(octoberRows.map(r => r["Vehicle Key"]).filter(Boolean))].sort();
 
   if (uniqueVehicles.length === 0) {
-    checklistResult.innerHTML = `<span style="color: #dc2626;">No se encontraron registros de vehículos para el mes de octubre.</span>`;
+    checklistResult.innerHTML = `<span style="color: #dc2626;">No se encontraron registros de vehículos válidos para el mes de octubre.</span>`;
     return;
   }
 
   checklistResult.innerHTML = `
-    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Se encontraron <strong>${uniqueVehicles.length}</strong> placas únicas operando en octubre. Validando existencia de PDFs...</p>
+    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Se encontraron <strong>${uniqueVehicles.length}</strong> placas únicas operando en octubre (excluyendo RES-CLI y FRT-001). Validando PDFs...</p>
     <div class="table-responsive">
       <table class="gm-table" id="checklistTable">
         <thead>
@@ -340,7 +382,7 @@ async function loadChecklistData(rows) {
             <th>Placa / Vehículo</th>
             <th>Fumigación (PDF)</th>
             <th>Mantenimiento (PDF)</th>
-            <th>Acción / Ver Archivos</th>
+            <th>Acción / Ver Documentos</th>
           </tr>
         </thead>
         <tbody>
