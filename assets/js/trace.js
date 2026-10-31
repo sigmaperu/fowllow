@@ -100,7 +100,7 @@ function setupPdfModalEvents() {
   }
 }
 
-// Renderizar los 4 botones de documentos adaptados a tus carpetas y nombres exactos
+// Renderizar únicamente íconos compactos sin texto para Pedidos y Productos
 function renderPdfBadges(vehicleKey, deliveryDate) {
   if (!vehicleKey) return "—";
   const weekNum = deliveryDate ? getWeekNumber(deliveryDate) : 40;
@@ -112,14 +112,10 @@ function renderPdfBadges(vehicleKey, deliveryDate) {
 
   return `
     <div class="doc-icons">
-      <div style="display: flex; gap: 4px;">
-        <button type="button" onclick="openPdfModal('${fumigacionUrl}', 'Fumigación - Placa: ${vehicleKey}')" class="pdf-badge pdf-badge--fumigacion" title="Fumigación"><span>🦠</span> Fumigación</button>
-        <button type="button" onclick="openPdfModal('${mantenimientoUrl}', 'Mantenimiento - Placa: ${vehicleKey}')" class="pdf-badge pdf-badge--mantenimiento" title="Mantenimiento"><span>🔧</span> Mantenimiento</button>
-      </div>
-      <div style="display: flex; gap: 4px;">
-        <button type="button" onclick="openPdfModal('${limpiezaUrl}', 'Limpieza - Semana ${weekNum}')" class="pdf-badge pdf-badge--limpieza" title="Limpieza Semana ${weekNum}"><span>🧹</span> Limpieza (Sem ${weekNum})</button>
-        <button type="button" onclick="openPdfModal('${condicionUrl}', 'Condición - Semana ${weekNum}')" class="pdf-badge pdf-badge--condicion" title="Condición Semana ${weekNum}"><span>📋</span> Condición (Sem ${weekNum})</button>
-      </div>
+      <button type="button" onclick="openPdfModal('${fumigacionUrl}', 'Fumigación - Placa: ${vehicleKey}')" class="pdf-icon-btn pdf-icon-btn--fumigacion" title="Certificado de Fumigación">🦠</button>
+      <button type="button" onclick="openPdfModal('${mantenimientoUrl}', 'Mantenimiento - Placa: ${vehicleKey}')" class="pdf-icon-btn pdf-icon-btn--mantenimiento" title="Orden de Mantenimiento">🔧</button>
+      <button type="button" onclick="openPdfModal('${limpiezaUrl}', 'Limpieza - Semana ${weekNum}')" class="pdf-icon-btn pdf-icon-btn--limpieza" title="Control de Limpieza (Semana ${weekNum})">🧹</button>
+      <button type="button" onclick="openPdfModal('${condicionUrl}', 'Condición - Semana ${weekNum}')" class="pdf-icon-btn pdf-icon-btn--condicion" title="Condición de Unidades (Semana ${weekNum})">📋</button>
     </div>
   `;
 }
@@ -147,7 +143,6 @@ async function start() {
   const sectionProducto = document.getElementById("sectionProducto");
   const sectionChecklist = document.getElementById("sectionChecklist");
 
-  // Sistema de pestañas con persistencia (no borra los inputs ni resultados previos)
   const switchTab = (activeBtn, activeSection) => {
     [btnModePedido, btnModeProducto, btnModeChecklist].forEach(b => { if(b) b.classList.remove("active"); });
     [sectionPedido, sectionProducto, sectionChecklist].forEach(s => { if(s) s.classList.remove("active"); });
@@ -371,7 +366,7 @@ function showProductTable(productName, rows) {
   `;
 }
 
-// Checklist Octubre
+// Checklist Octubre (Solo valida Fumigación y Mantenimiento por placa)
 async function loadChecklistData(rows) {
   const checklistResult = document.getElementById("checklistResult");
   checklistResult.innerHTML = "<p>Filtrando operaciones de octubre (excluyendo RES-CLI y FRT-001) y validando archivos...</p>";
@@ -398,7 +393,7 @@ async function loadChecklistData(rows) {
   }
 
   checklistResult.innerHTML = `
-    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Se encontraron <strong>${uniqueVehicles.length}</strong> placas únicas operando en octubre. Validando PDFs...</p>
+    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Se encontraron <strong>${uniqueVehicles.length}</strong> placas únicas operando en octubre. Validando PDFs de Fumigación y Mantenimiento...</p>
     <div class="table-responsive">
       <table class="gm-table" id="checklistTable">
         <thead>
@@ -407,7 +402,7 @@ async function loadChecklistData(rows) {
             <th>Placa / Vehículo</th>
             <th>Fumigación (PDF)</th>
             <th>Mantenimiento (PDF)</th>
-            <th>Acción / Ver Documentos</th>
+            <th>Ver Documentos</th>
           </tr>
         </thead>
         <tbody>
@@ -417,7 +412,12 @@ async function loadChecklistData(rows) {
               <td><strong>${veh}</strong></td>
               <td id="fum-${veh}">⌛ Verificando...</td>
               <td id="mnt-${veh}">⌛ Verificando...</td>
-              <td>${renderPdfBadges(veh, "15/10/2026")}</td>
+              <td>
+                <div class="doc-icons">
+                  <button type="button" onclick="openPdfModal('../docs/fumigacion/${veh}.pdf', 'Fumigación - Placa: ${veh}')" class="pdf-icon-btn pdf-icon-btn--fumigacion" title="Fumigación">🦠</button>
+                  <button type="button" onclick="openPdfModal('../docs/mantenimiento/${veh}.pdf', 'Mantenimiento - Placa: ${veh}')" class="pdf-icon-btn pdf-icon-btn--mantenimiento" title="Mantenimiento">🔧</button>
+                </div>
+              </td>
             </tr>
           `).join("")}
         </tbody>
