@@ -2,6 +2,7 @@ const componentsReady = () => document.getElementById("pedidoInput") ? Promise.r
 
 let globalRows = [];
 let dataLoaded = false;
+let checklistInitialized = false;
 
 async function loadTraceData() {
   const url = "https://raw.githubusercontent.com/sigmaperu/fowllow/refs/heads/main/data/BaseTrazabilidad.csv";
@@ -49,7 +50,21 @@ function parseCSVLine(line) {
   return result;
 }
 
-// Función global para abrir el Pop-up / Modal de previsualización
+// Calcular número de semana a partir de fecha DD/MM/YYYY
+function getWeekNumber(dateStr) {
+  const parts = dateStr.split("/");
+  if (parts.length !== 3) return 40;
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const year = parseInt(parts[2], 10);
+  
+  const targetDate = new Date(year, month, day);
+  const firstDayOfYear = new Date(year, 0, 1);
+  const pastDaysOfYear = (targetDate - firstDayOfYear) / 86400000;
+  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+// Modal Global
 window.openPdfModal = function(url, title) {
   const modal = document.getElementById("pdfModal");
   const iframe = document.getElementById("pdfViewerFrame");
@@ -85,16 +100,26 @@ function setupPdfModalEvents() {
   }
 }
 
-// Generar botones que abren el modal en lugar de descargar directo
-function renderPdfBadges(vehicleKey) {
+// Renderizar los 4 botones de documentos adaptados a tus carpetas y nombres exactos
+function renderPdfBadges(vehicleKey, deliveryDate) {
   if (!vehicleKey) return "—";
+  const weekNum = deliveryDate ? getWeekNumber(deliveryDate) : 40;
+
   const fumigacionUrl = `../docs/fumigacion/${vehicleKey}.pdf`;
   const mantenimientoUrl = `../docs/mantenimiento/${vehicleKey}.pdf`;
+  const limpiezaUrl = `../docs/limpieza/Limpieza Semana ${weekNum}.pdf`;
+  const condicionUrl = `../docs/condicion/Condicion Semana ${weekNum}.pdf`;
 
   return `
     <div class="doc-icons">
-      <button type="button" onclick="openPdfModal('${fumigacionUrl}', 'Certificado de Fumigación - Placa: ${vehicleKey}')" class="pdf-badge pdf-badge--fumigacion" title="Previsualizar fumigación"><span>🦠</span> Fumigación</button>
-      <button type="button" onclick="openPdfModal('${mantenimientoUrl}', 'Orden de Mantenimiento - Placa: ${vehicleKey}')" class="pdf-badge pdf-badge--mantenimiento" title="Previsualizar mantenimiento"><span>🔧</span> Mantenimiento</button>
+      <div style="display: flex; gap: 4px;">
+        <button type="button" onclick="openPdfModal('${fumigacionUrl}', 'Fumigación - Placa: ${vehicleKey}')" class="pdf-badge pdf-badge--fumigacion" title="Fumigación"><span>🦠</span> Fumigación</button>
+        <button type="button" onclick="openPdfModal('${mantenimientoUrl}', 'Mantenimiento - Placa: ${vehicleKey}')" class="pdf-badge pdf-badge--mantenimiento" title="Mantenimiento"><span>🔧</span> Mantenimiento</button>
+      </div>
+      <div style="display: flex; gap: 4px;">
+        <button type="button" onclick="openPdfModal('${limpiezaUrl}', 'Limpieza - Semana ${weekNum}')" class="pdf-badge pdf-badge--limpieza" title="Limpieza Semana ${weekNum}"><span>🧹</span> Limpieza (Sem ${weekNum})</button>
+        <button type="button" onclick="openPdfModal('${condicionUrl}', 'Condición - Semana ${weekNum}')" class="pdf-badge pdf-badge--condicion" title="Condición Semana ${weekNum}"><span>📋</span> Condición (Sem ${weekNum})</button>
+      </div>
     </div>
   `;
 }
@@ -122,11 +147,12 @@ async function start() {
   const sectionProducto = document.getElementById("sectionProducto");
   const sectionChecklist = document.getElementById("sectionChecklist");
 
+  // Sistema de pestañas con persistencia (no borra los inputs ni resultados previos)
   const switchTab = (activeBtn, activeSection) => {
     [btnModePedido, btnModeProducto, btnModeChecklist].forEach(b => { if(b) b.classList.remove("active"); });
-    [sectionPedido, sectionProducto, sectionChecklist].forEach(s => { if(s) s.style.display = "none"; });
+    [sectionPedido, sectionProducto, sectionChecklist].forEach(s => { if(s) s.classList.remove("active"); });
     if(activeBtn) activeBtn.classList.add("active");
-    if(activeSection) activeSection.style.display = "block";
+    if(activeSection) activeSection.classList.add("active");
   };
 
   if (btnModePedido && sectionPedido) {
@@ -138,10 +164,11 @@ async function start() {
   if (btnModeChecklist && sectionChecklist) {
     btnModeChecklist.addEventListener("click", () => {
       switchTab(btnModeChecklist, sectionChecklist);
-      if (!dataLoaded) {
-        document.getElementById("checklistResult").innerHTML = "<p>⏳ Cargando base de datos, por favor espere un momento...</p>";
-      } else {
+      if (dataLoaded && !checklistInitialized) {
         loadChecklistData(globalRows);
+        checklistInitialized = true;
+      } else if (!dataLoaded) {
+        document.getElementById("checklistResult").innerHTML = "<p>⏳ Cargando base de datos, por favor espere...</p>";
       }
     });
   }
@@ -159,8 +186,9 @@ async function start() {
     if (productoInput) { productoInput.placeholder = "Escribe el nombre del producto..."; productoInput.disabled = false; }
     if (pedidoInput) { pedidoInput.placeholder = "Ej. 3033203774..."; pedidoInput.disabled = false; }
 
-    if (btnModeChecklist && btnModeChecklist.classList.contains("active")) {
+    if (btnModeChecklist && btnModeChecklist.classList.contains("active") && !checklistInitialized) {
       loadChecklistData(globalRows);
+      checklistInitialized = true;
     }
 
     initSearchFeatures(globalRows);
@@ -189,6 +217,7 @@ function initSearchFeatures(rows) {
 
     if (match) {
       const vehicle = match["Vehicle Key"] || "";
+      const date = match["Delivery Date"] || "";
       pedidoResult.innerHTML = `
         <div class="table-responsive">
           <table class="gm-table">
@@ -205,11 +234,11 @@ function initSearchFeatures(rows) {
             <tbody>
               <tr>
                 <td><strong>${match["Shipment Custom"] || "—"}</strong></td>
-                <td>${match["Delivery Date"] || "—"}</td>
+                <td>${date}</td>
                 <td><strong>${vehicle}</strong></td>
                 <td>${match["Customer Name"] || "—"}</td>
                 <td>${match["Customer Name2"] || "—"}</td>
-                <td>${renderPdfBadges(vehicle)}</td>
+                <td>${renderPdfBadges(vehicle, date)}</td>
               </tr>
             </tbody>
           </table>
@@ -333,7 +362,7 @@ function showProductTable(productName, rows) {
               <td><strong>${item.vehicle || "—"}</strong></td>
               <td>${item.customer || "—"}</td>
               <td>${item.commercial || "—"}</td>
-              <td>${renderPdfBadges(item.vehicle)}</td>
+              <td>${renderPdfBadges(item.vehicle, item.date)}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -342,22 +371,18 @@ function showProductTable(productName, rows) {
   `;
 }
 
-// --- 3. CHECKLIST OCTUBRE (Filtro estrictamente octubre y exclusión de placas) ---
+// Checklist Octubre
 async function loadChecklistData(rows) {
   const checklistResult = document.getElementById("checklistResult");
   checklistResult.innerHTML = "<p>Filtrando operaciones de octubre (excluyendo RES-CLI y FRT-001) y validando archivos...</p>";
 
-  // Placas excluidas por requerimiento
   const excludedVehicles = ["RES-CLI", "FRT-001"];
 
   const octoberRows = rows.filter(r => {
     const dateStr = r["Delivery Date"] || "";
     const vehicleKey = (r["Vehicle Key"] || "").trim();
-
-    // Validar exclusión de placas
     if (excludedVehicles.includes(vehicleKey)) return false;
 
-    // Validar estricto mes de octubre (part[1] === "10")
     const parts = dateStr.split("/");
     if (parts.length === 3) {
       return parts[1] === "10";
@@ -373,7 +398,7 @@ async function loadChecklistData(rows) {
   }
 
   checklistResult.innerHTML = `
-    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Se encontraron <strong>${uniqueVehicles.length}</strong> placas únicas operando en octubre (excluyendo RES-CLI y FRT-001). Validando PDFs...</p>
+    <p style="margin-bottom: 10px; font-size: 0.85rem; color: #64748b;">Se encontraron <strong>${uniqueVehicles.length}</strong> placas únicas operando en octubre. Validando PDFs...</p>
     <div class="table-responsive">
       <table class="gm-table" id="checklistTable">
         <thead>
@@ -392,7 +417,7 @@ async function loadChecklistData(rows) {
               <td><strong>${veh}</strong></td>
               <td id="fum-${veh}">⌛ Verificando...</td>
               <td id="mnt-${veh}">⌛ Verificando...</td>
-              <td>${renderPdfBadges(veh)}</td>
+              <td>${renderPdfBadges(veh, "15/10/2026")}</td>
             </tr>
           `).join("")}
         </tbody>
