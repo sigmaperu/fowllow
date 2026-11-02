@@ -33,13 +33,13 @@
     .gm-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #475569; vertical-align: middle; }
     .gm-table tr:last-child td { border-bottom: none; }
 
-    /* Íconos compactos sin texto para las tablas de Pedido y Producto */
     .doc-icons { display: flex; gap: 6px; align-items: center; justify-content: center; }
     .pdf-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; font-size: 1rem; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: transform 0.2s, opacity 0.2s; }
     .pdf-icon-btn--fumigacion { background: #dbeafe; border-color: #bfdbfe; }
     .pdf-icon-btn--mantenimiento { background: #fef3c7; border-color: #fde68a; }
     .pdf-icon-btn--limpieza { background: #d1fae5; border-color: #a7f3d0; }
     .pdf-icon-btn--condicion { background: #f3e8ff; border-color: #e9d5ff; }
+    .pdf-icon-btn--contratos { background: #fee2e2; border-color: #fecaca; }
     .pdf-icon-btn:hover { transform: scale(1.1); opacity: 0.9; }
 
     .status-badge { font-weight: 700; font-size: 1rem; }
@@ -48,14 +48,21 @@
     .trace-mode-btn { padding: 10px 20px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
     .trace-mode-btn.active { background: var(--gm-blue, #2563eb); color: #fff; border-color: var(--gm-blue, #2563eb); }
 
-    /* Modal de Previsualización PDF */
+    /* Modal de Previsualización PDF y Directorio */
     .pdf-modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); z-index: 1000; place-items: center; padding: 20px; backdrop-filter: blur(4px); }
     .pdf-modal-content { background: #fff; width: 100%; max-width: 850px; height: 85vh; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
     .pdf-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
     .pdf-modal-header h3 { margin: 0; font-size: 1.05rem; color: #1e293b; }
     .pdf-modal-close { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1; }
-    .pdf-modal-body { flex: 1; background: #e2e8f0; display: flex; }
-    .pdf-modal-body iframe { width: 100%; height: 100%; border: none; }
+    .pdf-modal-body { flex: 1; background: #e2e8f0; display: flex; position: relative; }
+    .pdf-modal-body iframe { width: 100%; height: 100%; border: none; display: none; }
+    .pdf-modal-body.single-view iframe { display: block; }
+    
+    .pdf-directory-view { width: 100%; height: 100%; background: #fff; padding: 20px; overflow-y: auto; display: none; }
+    .pdf-modal-body.directory-view .pdf-directory-view { display: block; }
+    .contract-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; background: #f8fafc; transition: background 0.2s; }
+    .contract-list-item:hover { background: #f1f5f9; }
+    
     .pdf-modal-footer { padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
   </style>
 </head>
@@ -82,7 +89,7 @@
         <!-- 1. Búsqueda por Pedido -->
         <section id="sectionPedido" class="trace-card active">
           <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">🔍 Búsqueda por Pedido (Shipment Custom)</h2>
-          <p style="font-size: 0.85rem; color: #64748b;">Consulta el detalle del despacho y visualiza los documentos mediante accesos directos.</p>
+          <p style="font-size: 0.85rem; color: #64748b;">Consulta el detalle del despacho y visualiza los documentos y contratos por proveedor.</p>
           <div class="trace-form-group">
             <input type="text" id="pedidoInput" class="trace-input" placeholder="Ej. 3033203774...">
             <button id="buscarPedidoBtn" class="trace-btn">Consultar Pedido</button>
@@ -93,7 +100,7 @@
         <!-- 2. Búsqueda por Producto -->
         <section id="sectionProducto" class="trace-card">
           <h2 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 4px;">📦 Búsqueda por Producto (Item Description)</h2>
-          <p style="font-size: 0.85rem; color: #64748b;">Escribe el producto y consulta el resumen consolidado con acceso rápido a documentos.</p>
+          <p style="font-size: 0.85rem; color: #64748b;">Escribe el producto y consulta el resumen consolidado con acceso a documentos.</p>
           <div class="trace-form-group">
             <div style="position: relative; flex: 1; display: flex;">
               <input type="text" id="productoInput" class="trace-input" placeholder="Escribe el nombre del producto..." style="width: 100%;">
@@ -117,17 +124,19 @@
     <div id="footer"></div>
   </div>
 
-  <!-- Modal / Pop-up de Previsualización PDF -->
+  <!-- Modal / Pop-up Inteligente -->
   <div id="pdfModal" class="pdf-modal">
     <div class="pdf-modal-content">
       <div class="pdf-modal-header">
         <h3 id="pdfModalTitle">Visualizando Documento</h3>
         <button class="pdf-modal-close" id="closePdfModal">&times;</button>
       </div>
-      <div class="pdf-modal-body">
+      <div id="pdfModalBodyContainer" class="pdf-modal-body single-view">
         <iframe id="pdfViewerFrame" src=""></iframe>
+        <div id="pdfDirectoryView" class="pdf-directory-view"></div>
       </div>
       <div class="pdf-modal-footer">
+        <button id="backToDirectoryBtn" class="trace-mode-btn" style="display: none; padding: 8px 16px;">← Volver a la lista</button>
         <a id="pdfDownloadBtn" href="" target="_blank" class="trace-btn" style="text-decoration: none; font-size: 0.85rem; padding: 8px 16px;">📥 Descargar PDF</a>
         <button id="closePdfModalBtn" class="trace-mode-btn" style="padding: 8px 16px;">Cerrar</button>
       </div>
