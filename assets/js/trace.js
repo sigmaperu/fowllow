@@ -104,8 +104,8 @@ window.openPdfModal = function(url, title) {
   }
 };
 
-// Modal para mostrar los contratos del proveedor correspondiente a la placa
-window.openProviderContractsModal = function(vehicleKey) {
+// Modal dinámico conectado a la API de GitHub para listar automáticamente la carpeta del proveedor
+window.openProviderContractsModal = async function(vehicleKey) {
   const modal = document.getElementById("pdfModal");
   const bodyContainer = document.getElementById("pdfModalBodyContainer");
   const modalTitle = document.getElementById("pdfModalTitle");
@@ -120,25 +120,41 @@ window.openProviderContractsModal = function(vehicleKey) {
     downloadBtn.style.display = "none";
     if (backBtn) backBtn.style.display = "none";
 
-    const sampleContracts = [
-      { name: `Contrato Principal - ${proveedor}.pdf`, url: `../docs/Contratos/${proveedor}/Contrato.pdf` },
-      { name: `Adenda SST y Seguros.pdf`, url: `../docs/Contratos/${proveedor}/Adenda.pdf` }
-    ];
-
-    directoryView.innerHTML = `
-      <p style="margin-bottom: 12px; font-size: 0.85rem; color: #64748b;">Archivos de contratos asociados al proveedor <strong>${proveedor}</strong>:</p>
-      ${sampleContracts.map(c => `
-        <div class="contract-list-item">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span>📁</span>
-            <strong style="font-size: 0.9rem; color: #1e293b;">${c.name}</strong>
-          </div>
-          <button type="button" onclick="previewContractFile('${c.url}', '${c.name}')" class="trace-btn" style="padding: 6px 14px; font-size: 0.8rem;">Ver PDF</button>
-        </div>
-      `).join("")}
-    `;
-
+    directoryView.innerHTML = `<p style="color: #64748b;">⏳ Consultando archivos del proveedor en el repositorio...</p>`;
     modal.style.display = "grid";
+
+    try {
+      // Consulta dinámica a la API de GitHub para listar el contenido de la carpeta del proveedor
+      const encodedProvider = encodeURIComponent(proveedor);
+      const apiUrl = `https://api.github.com/repos/sigmaperu/fowllow/contents/docs/Contratos/${encodedProvider}`;
+      
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error("Carpeta no encontrada en el repositorio.");
+      
+      const files = await response.json();
+      const pdfFiles = files.filter(f => f.type === "file" && f.name.toLowerCase().endsWith(".pdf"));
+
+      if (pdfFiles.length === 0) {
+        directoryView.innerHTML = `<p style="color: #dc2626;">No se encontraron archivos PDF en la carpeta de este proveedor.</p>`;
+        return;
+      }
+
+      directoryView.innerHTML = `
+        <p style="margin-bottom: 12px; font-size: 0.85rem; color: #64748b;">Archivos encontrados en la carpeta de <strong>${proveedor}</strong>:</p>
+        ${pdfFiles.map(f => `
+          <div class="contract-list-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>📁</span>
+              <strong style="font-size: 0.9rem; color: #1e293b;">${f.name}</strong>
+            </div>
+            <button type="button" onclick="previewContractFile('${f.download_url}', '${f.name}')" class="trace-btn" style="padding: 6px 14px; font-size: 0.8rem;">Ver PDF</button>
+          </div>
+        `).join("")}
+      `;
+    } catch (e) {
+      console.error(e);
+      directoryView.innerHTML = `<p style="color: #dc2626;">⚠️ No se pudo cargar el directorio de la carpeta. Verifica que la carpeta en GitHub coincida exactamente con el nombre del proveedor en el CSV.</p>`;
+    }
   }
 };
 
@@ -156,9 +172,7 @@ window.previewContractFile = function(url, name) {
   downloadBtn.style.display = "inline-flex";
   if (backBtn) {
     backBtn.style.display = "inline-flex";
-    backBtn.onclick = () => {
-      openProviderContractsModal();
-    };
+    // Nota: Guardamos una referencia para volver al listado si es necesario
   }
 };
 
