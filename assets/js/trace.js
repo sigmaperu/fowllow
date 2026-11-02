@@ -104,8 +104,11 @@ window.openPdfModal = function(url, title) {
   }
 };
 
-// Modal dinámico conectado 100% a la API de GitHub para leer la carpeta real del proveedor
+// Guardamos globalmente la placa actual para poder regresar a la lista de contratos del proveedor
+let currentVehicleForContracts = "";
+
 window.openProviderContractsModal = async function(vehicleKey) {
+  currentVehicleForContracts = vehicleKey;
   const modal = document.getElementById("pdfModal");
   const bodyContainer = document.getElementById("pdfModalBodyContainer");
   const modalTitle = document.getElementById("pdfModalTitle");
@@ -140,15 +143,19 @@ window.openProviderContractsModal = async function(vehicleKey) {
 
       directoryView.innerHTML = `
         <p style="margin-bottom: 12px; font-size: 0.85rem; color: #64748b;">Archivos encontrados en la carpeta de <strong>${proveedor}</strong>:</p>
-        ${pdfFiles.map(f => `
-          <div class="contract-list-item">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span>📁</span>
-              <strong style="font-size: 0.9rem; color: #1e293b;">${f.name}</strong>
+        ${pdfFiles.map(f => {
+          // Construimos la ruta local directa para GitHub Pages (ej: ../docs/Contratos/PROVEEDOR/nombre.pdf)
+          const localPdfUrl = `../docs/Contratos/${proveedor}/${f.name}`;
+          return `
+            <div class="contract-list-item">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span>📁</span>
+                <strong style="font-size: 0.9rem; color: #1e293b;">${f.name}</strong>
+              </div>
+              <button type="button" onclick="previewContractFile('${localPdfUrl}', '${f.name}')" class="trace-btn" style="padding: 6px 14px; font-size: 0.8rem;">Ver PDF</button>
             </div>
-            <button type="button" onclick="previewContractFile('${f.download_url}', '${f.name}')" class="trace-btn" style="padding: 6px 14px; font-size: 0.8rem;">Ver PDF</button>
-          </div>
-        `).join("")}
+          `;
+        }).join("")}
       `;
     } catch (e) {
       console.error(e);
@@ -171,6 +178,9 @@ window.previewContractFile = function(url, name) {
   downloadBtn.style.display = "inline-flex";
   if (backBtn) {
     backBtn.style.display = "inline-flex";
+    backBtn.onclick = () => {
+      openProviderContractsModal(currentVehicleForContracts);
+    };
   }
 };
 
