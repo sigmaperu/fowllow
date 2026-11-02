@@ -120,7 +120,6 @@ window.openProviderContractsModal = function(vehicleKey) {
     downloadBtn.style.display = "none";
     if (backBtn) backBtn.style.display = "none";
 
-    // Nota: Puedes agregar los nombres reales de los archivos PDF que subiste dentro de la carpeta de ese proveedor en GitHub
     const sampleContracts = [
       { name: `Contrato Principal - ${proveedor}.pdf`, url: `../docs/Contratos/${proveedor}/Contrato.pdf` },
       { name: `Adenda SST y Seguros.pdf`, url: `../docs/Contratos/${proveedor}/Adenda.pdf` }
@@ -158,7 +157,6 @@ window.previewContractFile = function(url, name) {
   if (backBtn) {
     backBtn.style.display = "inline-flex";
     backBtn.onclick = () => {
-      // Al hacer clic en volver, extraemos la placa del título actual si es necesario
       openProviderContractsModal();
     };
   }
