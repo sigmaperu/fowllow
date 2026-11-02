@@ -1,20 +1,41 @@
 const componentsReady = () => document.getElementById("pedidoInput") ? Promise.resolve() : new Promise(resolve => document.addEventListener("components:ready", resolve, { once: true }));
 
 let globalRows = [];
+let checklistMap = new Map(); // Mapa de placa -> proveedor
 let dataLoaded = false;
 let checklistInitialized = false;
 
 async function loadTraceData() {
-  const url = "https://raw.githubusercontent.com/sigmaperu/fowllow/refs/heads/main/data/BaseTrazabilidad.csv";
-  const response = await fetch(url);
-  if (!response.ok) throw new Error("No se pudo conectar con BaseTrazabilidad.csv en el repositorio.");
-  const text = await response.text();
-  return parseCSV(text);
+  const traceUrl = "https://raw.githubusercontent.com/sigmaperu/fowllow/refs/heads/main/data/BaseTrazabilidad.csv";
+  const checkUrl = "https://raw.githubusercontent.com/sigmaperu/fowllow/refs/heads/main/data/CheckList.csv";
+
+  const [traceRes, checkRes] = await Promise.all([
+    fetch(traceUrl),
+    fetch(checkUrl).catch(() => null)
+  ]);
+
+  if (!traceRes.ok) throw new Error("No se pudo conectar con BaseTrazabilidad.csv en el repositorio.");
+  const traceText = await traceRes.text();
+  const traceData = parseCSV(traceText);
+
+  if (checkRes && checkRes.ok) {
+    const checkText = await checkRes.text();
+    const checkData = parseCSV(checkText);
+    checkData.rows.forEach(r => {
+      const placa = (r["Placa"] || r["Placa de vehículo"] || "").trim();
+      const proveedor = (r["PROVEEDOR"] || r["Proveedor"] || "").trim();
+      if (placa && proveedor) {
+        checklistMap.set(placa, proveedor);
+      }
+    });
+  }
+
+  return traceData;
 }
 
 function parseCSV(text) {
   const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
-  if (lines.length === 0) return [];
+  if (lines.length === 0) return { headers: [], rows: [] };
 
   const headers = parseCSVLine(lines[0]);
   const rows = [];
@@ -50,7 +71,6 @@ function parseCSVLine(line) {
   return result;
 }
 
-// Calcular número de semana a partir de fecha DD/MM/YYYY
 function getWeekNumber(dateStr) {
   const parts = dateStr.split("/");
   if (parts.length !== 3) return 40;
@@ -64,18 +84,83 @@ function getWeekNumber(dateStr) {
   return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 }
 
-// Modal Global
+// Modal para PDF único
 window.openPdfModal = function(url, title) {
   const modal = document.getElementById("pdfModal");
+  const bodyContainer = document.getElementById("pdfModalBodyContainer");
   const iframe = document.getElementById("pdfViewerFrame");
   const modalTitle = document.getElementById("pdfModalTitle");
   const downloadBtn = document.getElementById("pdfDownloadBtn");
+  const backBtn = document.getElementById("backToDirectoryBtn");
 
   if (modal && iframe && modalTitle) {
+    bodyContainer.className = "pdf-modal-body single-view";
     iframe.src = url;
     modalTitle.textContent = title;
     downloadBtn.href = url;
+    downloadBtn.style.display = "inline-flex";
+    if (backBtn) backBtn.style.display = "none";
     modal.style.display = "grid";
+  }
+};
+
+// Modal para mostrar los contratos del proveedor correspondiente a la placa
+window.openProviderContractsModal = function(vehicleKey) {
+  const modal = document.getElementById("pdfModal");
+  const bodyContainer = document.getElementById("pdfModalBodyContainer");
+  const modalTitle = document.getElementById("pdfModalTitle");
+  const directoryView = document.getElementById("pdfDirectoryView");
+  const downloadBtn = document.getElementById("pdfDownloadBtn");
+  const backBtn = document.getElementById("backToDirectoryBtn");
+
+  if (modal && directoryView && modalTitle) {
+    bodyContainer.className = "pdf-modal-body directory-view";
+    const proveedor = checklistMap.get(vehicleKey) || "Proveedor General";
+    modalTitle.textContent = `Contratos - Proveedor: ${proveedor} (Placa: ${vehicleKey})`;
+    downloadBtn.style.display = "none";
+    if (backBtn) backBtn.style.display = "none";
+
+    // Nota: Puedes agregar los nombres reales de los archivos PDF que subiste dentro de la carpeta de ese proveedor en GitHub
+    const sampleContracts = [
+      { name: `Contrato Principal - ${proveedor}.pdf`, url: `../docs/Contratos/${proveedor}/Contrato.pdf` },
+      { name: `Adenda SST y Seguros.pdf`, url: `../docs/Contratos/${proveedor}/Adenda.pdf` }
+    ];
+
+    directoryView.innerHTML = `
+      <p style="margin-bottom: 12px; font-size: 0.85rem; color: #64748b;">Archivos de contratos asociados al proveedor <strong>${proveedor}</strong>:</p>
+      ${sampleContracts.map(c => `
+        <div class="contract-list-item">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>📁</span>
+            <strong style="font-size: 0.9rem; color: #1e293b;">${c.name}</strong>
+          </div>
+          <button type="button" onclick="previewContractFile('${c.url}', '${c.name}')" class="trace-btn" style="padding: 6px 14px; font-size: 0.8rem;">Ver PDF</button>
+        </div>
+      `).join("")}
+    `;
+
+    modal.style.display = "grid";
+  }
+};
+
+window.previewContractFile = function(url, name) {
+  const bodyContainer = document.getElementById("pdfModalBodyContainer");
+  const iframe = document.getElementById("pdfViewerFrame");
+  const modalTitle = document.getElementById("pdfModalTitle");
+  const downloadBtn = document.getElementById("pdfDownloadBtn");
+  const backBtn = document.getElementById("backToDirectoryBtn");
+
+  bodyContainer.className = "pdf-modal-body single-view";
+  iframe.src = url;
+  modalTitle.textContent = name;
+  downloadBtn.href = url;
+  downloadBtn.style.display = "inline-flex";
+  if (backBtn) {
+    backBtn.style.display = "inline-flex";
+    backBtn.onclick = () => {
+      // Al hacer clic en volver, extraemos la placa del título actual si es necesario
+      openProviderContractsModal();
+    };
   }
 };
 
@@ -100,7 +185,6 @@ function setupPdfModalEvents() {
   }
 }
 
-// Renderizar únicamente íconos compactos sin texto para Pedidos y Productos
 function renderPdfBadges(vehicleKey, deliveryDate) {
   if (!vehicleKey) return "—";
   const weekNum = deliveryDate ? getWeekNumber(deliveryDate) : 40;
@@ -116,6 +200,7 @@ function renderPdfBadges(vehicleKey, deliveryDate) {
       <button type="button" onclick="openPdfModal('${mantenimientoUrl}', 'Mantenimiento - Placa: ${vehicleKey}')" class="pdf-icon-btn pdf-icon-btn--mantenimiento" title="Orden de Mantenimiento">🔧</button>
       <button type="button" onclick="openPdfModal('${limpiezaUrl}', 'Limpieza - Semana ${weekNum}')" class="pdf-icon-btn pdf-icon-btn--limpieza" title="Control de Limpieza (Semana ${weekNum})">🧹</button>
       <button type="button" onclick="openPdfModal('${condicionUrl}', 'Condición - Semana ${weekNum}')" class="pdf-icon-btn pdf-icon-btn--condicion" title="Condición de Unidades (Semana ${weekNum})">📋</button>
+      <button type="button" onclick="openProviderContractsModal('${vehicleKey}')" class="pdf-icon-btn pdf-icon-btn--contratos" title="Ver Contratos del Proveedor">📁</button>
     </div>
   `;
 }
@@ -193,7 +278,7 @@ async function start() {
     const alert = document.getElementById("traceError");
     if (alert) {
       alert.hidden = false;
-      alert.textContent = "Error al cargar o parsear BaseTrazabilidad.csv. Revisa la consola del navegador.";
+      alert.textContent = "Error al cargar o parsear datos. Revisa la consola del navegador.";
     }
   }
 }
@@ -366,7 +451,6 @@ function showProductTable(productName, rows) {
   `;
 }
 
-// Checklist Octubre (Solo valida Fumigación y Mantenimiento por placa)
 async function loadChecklistData(rows) {
   const checklistResult = document.getElementById("checklistResult");
   checklistResult.innerHTML = "<p>Filtrando operaciones de octubre (excluyendo RES-CLI y FRT-001) y validando archivos...</p>";
